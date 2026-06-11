@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { OnboardingForm } from "@/components/onboarding-form";
@@ -40,9 +38,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <>
       {needsOnboarding ? (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
           <div className="absolute inset-0 bg-slate-950/78 backdrop-blur-md" />
-          <div className="relative mx-auto flex min-h-screen max-w-2xl items-center justify-center p-4 sm:p-6">
+          <div className="relative mx-auto flex min-h-[100dvh] max-w-2xl items-stretch justify-center sm:items-center sm:p-6">
             <OnboardingForm hasError={resolvedSearchParams?.status === "error"} />
           </div>
         </div>

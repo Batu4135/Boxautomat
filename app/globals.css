@@ -25,6 +25,10 @@ body {
   overflow-x: hidden;
 }
 
+body.onboarding-open {
+  overflow: hidden;
+}
+
 a {
   color: inherit;
   text-decoration: none;
