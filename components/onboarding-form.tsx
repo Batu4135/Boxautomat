@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { registerParticipantAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { getOrCreateOwnershipIdentity } from "@/lib/client-ownership";
 import type { Gender } from "@/lib/types";
 
 type OnboardingFormProps = {
@@ -196,6 +197,7 @@ export function OnboardingForm({
   async function handleSubmit(formData: FormData) {
     setClientError(null);
     setIsPreparingUpload(true);
+    const identity = getOrCreateOwnershipIdentity();
 
     try {
       const currentPhoto = selectedPhoto;
@@ -229,6 +231,9 @@ export function OnboardingForm({
       } else {
         formData.delete("photo");
       }
+
+      formData.set("ownerToken", identity.ownerToken);
+      formData.set("recoveryCode", identity.recoveryCode);
     } catch {
       setClientError(
         "Das Foto konnte gerade nicht gesendet werden. Bitte versuche es noch einmal."

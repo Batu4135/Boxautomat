@@ -9,6 +9,8 @@ export type ParticipantRow = {
   score: number | null;
   photo_content_type: string | null;
   photo_filename: string | null;
+  owner_token?: string | null;
+  recovery_code?: string | null;
   created_at: string;
 };
 

@@ -65,12 +65,26 @@ export function OwnedEntriesPanel({ entries, statuses, returnTo }: OwnedEntriesP
   }
 
   const statusById = new Map(statuses.map((status) => [status.participant.id, status]));
+  const recoveryCode =
+    entries.find((entry) => entry.recovery_code?.trim())?.recovery_code?.trim() ?? null;
 
   return (
     <section className="app-panel px-4 py-4 sm:px-5 sm:py-5">
       <div className="mb-4">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/40">Dein Bereich</p>
         <h2 className="mt-2 font-display text-2xl text-white">Deine Einträge</h2>
+        {recoveryCode ? (
+          <div className="mt-3 rounded-[1.2rem] border border-emerald-300/18 bg-emerald-400/10 px-3 py-3 text-left">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-100/78">
+              Sicherungscode
+            </p>
+            <p className="mt-1 font-display text-lg text-emerald-50">{recoveryCode}</p>
+            <p className="mt-1 text-xs leading-5 text-emerald-100/72">
+              Damit kannst du deine Einträge wiederherstellen, falls Safari oder Chrome
+              Browserdaten löscht.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-2.5">

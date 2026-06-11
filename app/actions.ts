@@ -9,6 +9,7 @@ import {
   removeOwnedParticipant,
   requireAdmin,
   requireOwnedParticipant,
+  setOwnedParticipants,
   setAdminSession,
   setParticipantSession
 } from "@/lib/auth";
@@ -16,6 +17,7 @@ import {
   approveParticipant,
   createParticipant,
   deleteParticipant,
+  getParticipantsByRecoveryCode,
   updateParticipantSubmission,
   updateParticipantScore
 } from "@/lib/participants";
@@ -61,6 +63,8 @@ export async function registerParticipantAction(formData: FormData) {
   const scoreValue = safeText(formData.get("score"));
   const returnTo = safeReturnPath(formData.get("returnTo"));
   const editParticipantId = safeText(formData.get("editParticipantId"));
+  const ownerToken = safeText(formData.get("ownerToken"));
+  const recoveryCode = safeText(formData.get("recoveryCode"));
   const parsedScore = Number(scoreValue);
   const photo = formData.get("photo");
 
@@ -103,7 +107,9 @@ export async function registerParticipantAction(formData: FormData) {
           photoFileName:
             photo instanceof File && photo.size > 0
               ? safeText(photo.name) || `${name}-score.jpg`
-              : undefined
+              : undefined,
+          ownerToken,
+          recoveryCode
         });
       })()
     : await createParticipant({
@@ -114,7 +120,9 @@ export async function registerParticipantAction(formData: FormData) {
         photoData: Buffer.from(await (photo as File).arrayBuffer()),
         photoContentType: contentType || "image/jpeg",
         photoFileName:
-          photo instanceof File ? safeText(photo.name) || `${name}-score.jpg` : `${name}-score.jpg`
+          photo instanceof File ? safeText(photo.name) || `${name}-score.jpg` : `${name}-score.jpg`,
+        ownerToken,
+        recoveryCode
       });
 
   await setParticipantSession(participant.id);
@@ -198,6 +206,26 @@ export async function deleteOwnedParticipantAction(formData: FormData) {
   await requireOwnedParticipant(id);
   await deleteParticipant(id);
   await removeOwnedParticipant(id);
+  revalidatePath("/");
+  revalidatePath("/rangliste");
+  redirect(returnTo);
+}
+
+export async function restoreEntriesByRecoveryCodeAction(formData: FormData) {
+  const recoveryCode = safeText(formData.get("recoveryCode"));
+  const returnTo = safeReturnPath(formData.get("returnTo"));
+
+  if (!recoveryCode) {
+    redirect(withQuery(returnTo, { recover: "error" }));
+  }
+
+  const participants = await getParticipantsByRecoveryCode(recoveryCode);
+
+  if (participants.length === 0) {
+    redirect(withQuery(returnTo, { recover: "error" }));
+  }
+
+  await setOwnedParticipants(participants.map((participant) => participant.id));
   revalidatePath("/");
   revalidatePath("/rangliste");
   redirect(returnTo);

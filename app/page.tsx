@@ -1,8 +1,10 @@
+import { DeviceOwnershipSync } from "@/components/device-ownership-sync";
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { LivePresence } from "@/components/live-presence";
 import { OnboardingForm } from "@/components/onboarding-form";
 import { OwnedEntriesPanel } from "@/components/owned-entries-panel";
+import { RecoveryPanel } from "@/components/recovery-panel";
 import { ScoreEntryButton } from "@/components/score-entry-button";
 import { getOwnedParticipantIds, getParticipantSession } from "@/lib/auth";
 import { getMissingEnvVars, hasRequiredEnvVars } from "@/lib/env";
@@ -21,6 +23,7 @@ type HomePageProps = {
     submit?: string;
     view?: string;
     edit?: string;
+    recover?: string;
   }>;
 };
 
@@ -63,6 +66,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <>
+      <DeviceOwnershipSync />
+
       {showSubmitFlow ? (
         <div className="fixed inset-0 z-50 bg-[radial-gradient(circle_at_top,_rgba(255,209,102,0.14),_transparent_24%),linear-gradient(180deg,_rgba(2,6,23,0.98),_rgba(10,22,37,1))]">
           <div className="mx-auto flex h-full max-w-2xl items-stretch justify-center sm:p-6">
@@ -106,6 +111,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           entries={ownedParticipants}
           statuses={ownedStatuses}
           returnTo="/?view=board"
+        />
+        <RecoveryPanel
+          returnTo="/?view=board"
+          hasError={resolvedSearchParams?.recover === "error"}
         />
       </section>
 

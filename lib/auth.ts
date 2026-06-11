@@ -8,6 +8,18 @@ const ADMIN_COOKIE = "boxautomat-admin";
 const PARTICIPANT_COOKIE = "boxautomat-participant";
 const OWNED_PARTICIPANTS_COOKIE = "boxautomat-owned";
 
+async function setOwnedParticipantsCookie(participantIds: string[]) {
+  const cookieStore = await cookies();
+
+  cookieStore.set(OWNED_PARTICIPANTS_COOKIE, participantIds.join(","), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30
+  });
+}
+
 export async function isAdminAuthenticated() {
   const cookieStore = await cookies();
   return cookieStore.get(ADMIN_COOKIE)?.value === getAdminPassword();
@@ -63,13 +75,7 @@ export async function addOwnedParticipant(participantId: string) {
     )
   );
 
-  cookieStore.set(OWNED_PARTICIPANTS_COOKIE, nextIds.join(","), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30
-  });
+  await setOwnedParticipantsCookie(nextIds);
 }
 
 export async function getParticipantSession() {
@@ -96,16 +102,9 @@ export async function requireOwnedParticipant(participantId: string) {
 }
 
 export async function removeOwnedParticipant(participantId: string) {
-  const cookieStore = await cookies();
   const ownedIds = (await getOwnedParticipantIds()).filter((id) => id !== participantId);
 
-  cookieStore.set(OWNED_PARTICIPANTS_COOKIE, ownedIds.join(","), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30
-  });
+  await setOwnedParticipantsCookie(ownedIds);
 
   if ((await getParticipantSession()) === participantId) {
     if (ownedIds[0]) {
@@ -119,4 +118,16 @@ export async function removeOwnedParticipant(participantId: string) {
 export async function clearParticipantSession() {
   const cookieStore = await cookies();
   cookieStore.delete(PARTICIPANT_COOKIE);
+}
+
+export async function setOwnedParticipants(participantIds: string[]) {
+  const uniqueIds = Array.from(new Set(participantIds.filter(Boolean)));
+
+  await setOwnedParticipantsCookie(uniqueIds);
+
+  if (uniqueIds[0]) {
+    await setParticipantSession(uniqueIds[0]);
+  } else {
+    await clearParticipantSession();
+  }
 }
