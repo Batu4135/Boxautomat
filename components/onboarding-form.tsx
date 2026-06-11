@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { registerParticipantAction } from "@/app/actions";
@@ -8,6 +9,10 @@ import type { Gender } from "@/lib/types";
 
 type OnboardingFormProps = {
   hasError?: boolean;
+  closeHref?: string;
+  defaultName?: string;
+  defaultGender?: Gender | "";
+  returnTo?: string;
 };
 
 const MOBILE_UPLOAD_TARGET_BYTES = 1_500_000;
@@ -97,10 +102,16 @@ async function compressPhotoForUpload(file: File) {
   });
 }
 
-export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
+export function OnboardingForm({
+  hasError = false,
+  closeHref,
+  defaultName = "",
+  defaultGender = "",
+  returnTo = "/"
+}: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [name, setName] = useState("");
-  const [gender, setGender] = useState<Gender | "">("");
+  const [name, setName] = useState(defaultName);
+  const [gender, setGender] = useState<Gender | "">(defaultGender);
   const [score, setScore] = useState("");
   const [photoName, setPhotoName] = useState("");
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
@@ -175,10 +186,20 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
 
       <div className="relative z-10 flex items-center justify-between gap-3">
         <p className="text-sm font-semibold uppercase tracking-[0.4em] text-orange-200/80">
-          Erster Scan
+          Score Upload
         </p>
-        <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-orange-50/85">
-          {currentStep}/{totalSteps}
+        <div className="flex items-center gap-2">
+          <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-orange-50/85">
+            {currentStep}/{totalSteps}
+          </div>
+          {closeHref ? (
+            <Link
+              href={closeHref}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/8 text-lg text-white/80 transition hover:bg-white/12"
+            >
+              ×
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -369,6 +390,7 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
               <input type="hidden" name="gender" value={gender} />
               <input type="hidden" name="phone" value="" />
               <input type="hidden" name="score" value={score} />
+              <input type="hidden" name="returnTo" value={returnTo} />
             </div>
           ) : null}
         </div>

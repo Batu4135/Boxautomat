@@ -24,11 +24,22 @@ function safeText(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function safeReturnPath(value: FormDataEntryValue | null) {
+  const resolved = safeText(value);
+
+  if (!resolved.startsWith("/") || resolved.startsWith("//")) {
+    return "/";
+  }
+
+  return resolved;
+}
+
 export async function registerParticipantAction(formData: FormData) {
   const name = safeText(formData.get("name"));
   const gender = parseGender(formData.get("gender"));
   const phone = safeText(formData.get("phone"));
   const scoreValue = safeText(formData.get("score"));
+  const returnTo = safeReturnPath(formData.get("returnTo"));
   const parsedScore = Number(scoreValue);
   const photo = formData.get("photo");
 
@@ -42,13 +53,13 @@ export async function registerParticipantAction(formData: FormData) {
     photo.size === 0 ||
     photo.size > 4 * 1024 * 1024
   ) {
-    redirect("/?status=error");
+    redirect(`${returnTo}?submit=1&status=error`);
   }
 
   const contentType = photo.type || "image/jpeg";
 
   if (!contentType.startsWith("image/")) {
-    redirect("/?status=error");
+    redirect(`${returnTo}?submit=1&status=error`);
   }
 
   const participant = await createParticipant({
@@ -63,7 +74,8 @@ export async function registerParticipantAction(formData: FormData) {
 
   await setParticipantSession(participant.id);
   revalidatePath("/");
-  redirect("/");
+  revalidatePath("/rangliste");
+  redirect(returnTo);
 }
 
 export async function adminLoginAction(formData: FormData) {
