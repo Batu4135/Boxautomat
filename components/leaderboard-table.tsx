@@ -87,8 +87,8 @@ export function LeaderboardTable({
                       {participant.name}
                     </p>
                     {highlighted ? (
-                      <span className="rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-[#ffe4a4]">
-                        Von dir erstellt
+                      <span className="shrink-0 rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#ffe4a4]">
+                        Dein
                       </span>
                     ) : null}
                   </div>

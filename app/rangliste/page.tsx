@@ -38,6 +38,9 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
     ? await getParticipantStatus(participantSession)
     : null;
   const ownedParticipants = await getParticipantsByIds(ownedParticipantIds);
+  const ownedStatuses = (
+    await Promise.all(ownedParticipants.map((participant) => getParticipantStatus(participant.id)))
+  ).filter((status) => status !== null);
   const leaderboard = getParticipantPerspectiveLeaderboard(
     await getLeaderboardParticipants(),
     participantStatus
@@ -75,7 +78,6 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
       <section className="space-y-5 pb-24">
         <LivePresence
           participantCount={summary.participantCount}
-          entryCount={summary.entryCount}
           bestRank={bestOwnedEntry?.rank ?? null}
           bestLabel={bestOwnedEntry?.name ?? null}
         />
@@ -95,7 +97,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           />
         </div>
 
-        <OwnedEntriesPanel entries={ownedParticipants} returnTo="/rangliste" />
+        <OwnedEntriesPanel entries={ownedParticipants} statuses={ownedStatuses} returnTo="/rangliste" />
       </section>
 
       <ScoreEntryButton href="/rangliste?submit=1" />

@@ -460,7 +460,7 @@ export function OnboardingForm({
                   required
                   minLength={2}
                   maxLength={80}
-                  placeholder="z. B. Flexx"
+                  placeholder="Spitzname eingeben"
                   autoFocus
                   value={nickname}
                   onChange={(event) => setNickname(event.target.value)}

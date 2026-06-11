@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { deleteOwnedParticipantAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
-import type { ParticipantRow } from "@/lib/types";
+import type { ParticipantRow, ParticipantViewStatus } from "@/lib/types";
 
 type OwnedEntriesPanelProps = {
   entries: ParticipantRow[];
+  statuses: ParticipantViewStatus[];
   returnTo: string;
 };
 
@@ -18,6 +19,26 @@ function withQuery(path: string, query: Record<string, string>) {
 
   const search = url.searchParams.toString();
   return `${url.pathname}${search ? `?${search}` : ""}`;
+}
+
+function getPlacementText(status: ParticipantViewStatus | undefined) {
+  if (!status) {
+    return "Wird geprüft";
+  }
+
+  if (status.state === "ranked") {
+    return `Platz #${status.leaderboardEntry.rank}`;
+  }
+
+  if (status.state === "pending" && status.leaderboardEntry) {
+    return `Vorläufig Platz #${status.leaderboardEntry.rank}`;
+  }
+
+  if (status.state === "approved") {
+    return "Freigegeben";
+  }
+
+  return "Wird geprüft";
 }
 
 function PencilIcon() {
@@ -39,10 +60,12 @@ function TrashIcon() {
   );
 }
 
-export function OwnedEntriesPanel({ entries, returnTo }: OwnedEntriesPanelProps) {
+export function OwnedEntriesPanel({ entries, statuses, returnTo }: OwnedEntriesPanelProps) {
   if (entries.length === 0) {
     return null;
   }
+
+  const statusById = new Map(statuses.map((status) => [status.participant.id, status]));
 
   return (
     <section className="app-panel px-4 py-4 sm:px-5 sm:py-5">
@@ -58,16 +81,17 @@ export function OwnedEntriesPanel({ entries, returnTo }: OwnedEntriesPanelProps)
             className="flex items-center gap-3 rounded-[1.4rem] border border-white/10 bg-white/[0.05] px-3 py-3"
           >
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
                 <p className="truncate text-sm font-semibold text-white sm:text-base">
                   {entry.name}
                 </p>
-                <span className="rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-[#ffe4a4]">
-                  Von dir erstellt
+                <span className="shrink-0 rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#ffe4a4]">
+                  Dein
                 </span>
               </div>
               <p className="mt-1 text-xs text-white/55">
-                {entry.gender === "female" ? "Frauen" : "Männer"} · {entry.score ?? 0} Punkte
+                {entry.gender === "female" ? "Frauen" : "Männer"} · {entry.score ?? 0} Punkte ·{" "}
+                {getPlacementText(statusById.get(entry.id))}
               </p>
             </div>
 
