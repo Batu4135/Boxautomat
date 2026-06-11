@@ -1,5 +1,6 @@
 "use client";
 
+import NextImage from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -64,7 +65,7 @@ function CameraIcon() {
 function loadImage(file: File) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const imageUrl = URL.createObjectURL(file);
-    const image = new Image();
+    const image = new window.Image();
 
     image.onload = () => {
       URL.revokeObjectURL(imageUrl);
@@ -146,6 +147,7 @@ export function OnboardingForm({
   const [score, setScore] = useState("");
   const [photoName, setPhotoName] = useState("");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const totalSteps = 3;
@@ -159,6 +161,14 @@ export function OnboardingForm({
       document.documentElement.classList.remove("onboarding-open");
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
 
   const canContinueFromStepOne = !!selectedPhoto;
   const canContinueFromStepTwo = score.trim() !== "" && Number(score) >= 0;
@@ -279,8 +289,14 @@ export function OnboardingForm({
                   className="sr-only"
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
+
+                    if (photoPreviewUrl) {
+                      URL.revokeObjectURL(photoPreviewUrl);
+                    }
+
                     setSelectedPhoto(file);
                     setPhotoName(file?.name ?? "");
+                    setPhotoPreviewUrl(file ? URL.createObjectURL(file) : null);
                   }}
                 />
                 <label
@@ -301,6 +317,19 @@ export function OnboardingForm({
                       "Du kannst direkt fotografieren oder ein Bild aus deiner Foto-Mediathek auswählen."}
                   </span>
                 </label>
+
+                {photoPreviewUrl ? (
+                  <div className="mt-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/20">
+                    <NextImage
+                      src={photoPreviewUrl}
+                      alt="Vorschau des ausgewählten Score-Fotos"
+                      width={1200}
+                      height={720}
+                      unoptimized
+                      className="h-36 w-full object-cover"
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : null}
