@@ -1,5 +1,6 @@
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
+import { LiveTicker } from "@/components/live-ticker";
 import { OnboardingForm } from "@/components/onboarding-form";
 import { ParticipantStatusCard } from "@/components/participant-status-card";
 import { getParticipantSession } from "@/lib/auth";
@@ -46,19 +47,30 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5">
       <ParticipantStatusCard participantStatus={participantStatus} />
+      <LiveTicker participants={leaderboard.all.slice(0, 8)} />
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5">
         <LeaderboardTable
-          title="Frauen-Rangliste"
+          title="Frauen"
           participants={leaderboard.female}
           emptyText="Noch keine freigegebenen Scores in der Frauen-Rangliste."
+          highlightParticipantId={
+            participantStatus.participant.gender === "female"
+              ? participantStatus.participant.id
+              : undefined
+          }
         />
         <LeaderboardTable
-          title="Maenner-Rangliste"
+          title="Maenner"
           participants={leaderboard.male}
           emptyText="Noch keine freigegebenen Scores in der Maenner-Rangliste."
+          highlightParticipantId={
+            participantStatus.participant.gender === "male"
+              ? participantStatus.participant.id
+              : undefined
+          }
         />
       </div>
     </section>
