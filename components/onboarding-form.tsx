@@ -437,12 +437,15 @@ export function OnboardingForm({
             </div>
 
             <div className="rounded-[1.9rem] border border-white/10 bg-white/[0.07] p-4">
-              <div className="mb-4 flex flex-wrap gap-2 text-sm text-white/80">
-                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
+              <div className="mb-4 flex flex-wrap gap-2 text-sm">
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-400/14 px-3 py-1 font-medium text-emerald-100">
                   {photoName ? "Bild bereit" : "Kein Bild"}
                 </span>
-                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-400/14 px-3 py-1 font-medium text-emerald-100">
                   {score || "0"} Punkte
+                </span>
+                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-white/75">
+                  Name
                 </span>
               </div>
 
