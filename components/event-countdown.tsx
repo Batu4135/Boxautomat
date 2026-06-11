@@ -54,12 +54,12 @@ export function EventCountdown() {
   }, [now]);
 
   return (
-    <div className="flex items-center justify-center gap-3 py-1 text-center text-[11px] uppercase tracking-[0.3em] text-white/50 sm:text-xs">
-      <span>{state.label}</span>
-      <span className="text-white/25">•</span>
+    <div className="flex items-center justify-center gap-3 rounded-full border border-rose-400/25 bg-[linear-gradient(135deg,rgba(127,29,29,0.72),rgba(239,68,68,0.16))] px-4 py-2 text-center text-[11px] uppercase tracking-[0.28em] text-rose-100 shadow-[0_12px_30px_rgba(127,29,29,0.22)] sm:text-xs">
+      <span className="font-semibold text-rose-200">{state.label}</span>
+      <span className="text-rose-200/35">•</span>
       <span>{state.detail}</span>
-      <span className="text-white/25">•</span>
-      <span className="font-semibold text-[#ffd166]">{formatInline(state.remaining)}</span>
+      <span className="text-rose-200/35">•</span>
+      <span className="font-semibold text-[#ff8b8b]">{formatInline(state.remaining)}</span>
     </div>
   );
 }

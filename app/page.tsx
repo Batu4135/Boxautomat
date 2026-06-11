@@ -1,4 +1,3 @@
-import { EventCountdown } from "@/components/event-countdown";
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { LivePresence } from "@/components/live-presence";
@@ -79,7 +78,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       ) : null}
 
       <section className="space-y-5 pb-24">
-        <EventCountdown />
         <LivePresence
           participantCount={summary.participantCount}
           entryCount={summary.entryCount}
