@@ -1,10 +1,9 @@
 import Link from "next/link";
 
-import { registerParticipantAction } from "@/app/actions";
 import { EnvSetupCard } from "@/components/env-setup-card";
-import { FormSubmitButton } from "@/components/form-submit-button";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { LiveTicker } from "@/components/live-ticker";
+import { OnboardingForm } from "@/components/onboarding-form";
 import { ParticipantStatusCard } from "@/components/participant-status-card";
 import { getParticipantSession } from "@/lib/auth";
 import { getMissingEnvVars, hasRequiredEnvVars } from "@/lib/env";
@@ -39,75 +38,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {participantStatus ? (
             <ParticipantStatusCard participantStatus={participantStatus} />
           ) : (
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/8 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.45)] backdrop-blur sm:p-8">
-              <div className="board-grid" aria-hidden="true" />
-              <p className="relative z-10 text-sm font-semibold uppercase tracking-[0.4em] text-orange-200/80">
-                Sommerfest 2026
-              </p>
-              <h1 className="relative z-10 mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                Boxautomat Challenge Selimiye Bremen
-              </h1>
-              <p className="relative z-10 mt-4 max-w-2xl text-base leading-7 text-orange-50/85 sm:text-lg">
-                Direkt hier eintragen, dann zum Boxautomaten gehen. Dein Status
-                bleibt sichtbar und dein Platz erscheint automatisch, sobald das
-                Admin-Team den Score speichert.
-              </p>
-
-              {resolvedSearchParams?.status === "error" ? (
-                <div className="status-card status-error relative z-10 mt-6">
-                  Bitte Name und Geschlecht ausfuellen.
-                </div>
-              ) : null}
-
-              <form action={registerParticipantAction} className="relative z-10 mt-8 space-y-5">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium text-orange-50">
-                    Name
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    minLength={2}
-                    maxLength={80}
-                    placeholder="Dein Name"
-                  />
-                </div>
-
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="gender" className="text-sm font-medium text-orange-50">
-                      Geschlecht
-                    </label>
-                    <select id="gender" name="gender" required defaultValue="">
-                      <option value="" disabled>
-                        Bitte waehlen
-                      </option>
-                      <option value="female">Frau</option>
-                      <option value="male">Mann</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="phone" className="text-sm font-medium text-orange-50">
-                      Telefonnummer
-                    </label>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      maxLength={30}
-                      placeholder="optional"
-                    />
-                  </div>
-                </div>
-
-                <FormSubmitButton className="cta-button cta-primary w-full sm:w-auto sm:min-w-[16rem]">
-                  Jetzt eintragen
-                </FormSubmitButton>
-              </form>
-            </section>
+            <OnboardingForm hasError={resolvedSearchParams?.status === "error"} />
           )}
 
           <section className="rounded-[2rem] border border-white/10 bg-black/20 p-6 backdrop-blur">
@@ -120,27 +51,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   Vom Eintrag bis zum Platz
                 </h2>
               </div>
-              <Link href="/admin" className="cta-button cta-secondary text-sm">
-                Adminbereich
-              </Link>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.3em] text-orange-200/70">01</p>
                 <p className="mt-2 text-sm leading-6 text-orange-50/85">
-                  Teilnehmer tragen zuerst hier ihren Namen ein.
+                  Beim ersten QR-Scan gibst du deinen Namen und dein Geschlecht ein.
                 </p>
               </div>
               <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.3em] text-orange-200/70">02</p>
                 <p className="mt-2 text-sm leading-6 text-orange-50/85">
-                  Im Adminbereich erscheinen sie sofort in der Warteschlange.
+                  Direkt nach dem Schlag traegst du die Punktzahl ein und machst ein Foto vom Display.
                 </p>
               </div>
               <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.3em] text-orange-200/70">03</p>
                 <p className="mt-2 text-sm leading-6 text-orange-50/85">
-                  Nach dem Score-Speichern sieht der Nutzer hier direkt seinen Platz.
+                  Das Team prueft Foto und Wert. Danach erscheint dein Platz in der Rangliste.
                 </p>
               </div>
             </div>

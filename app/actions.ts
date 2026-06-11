@@ -3,13 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  clearAdminSession,
-  clearParticipantSession,
-  requireAdmin,
-  setAdminSession,
-  setParticipantSession
-} from "@/lib/auth";
+import { clearAdminSession, requireAdmin, setAdminSession, setParticipantSession } from "@/lib/auth";
 import {
   approveParticipant,
   createParticipant,
@@ -34,24 +28,41 @@ export async function registerParticipantAction(formData: FormData) {
   const name = safeText(formData.get("name"));
   const gender = parseGender(formData.get("gender"));
   const phone = safeText(formData.get("phone"));
+  const scoreValue = safeText(formData.get("score"));
+  const parsedScore = Number(scoreValue);
+  const photo = formData.get("photo");
 
-  if (name.length < 2 || name.length > 80 || !gender) {
+  if (
+    name.length < 2 ||
+    name.length > 80 ||
+    !gender ||
+    !Number.isFinite(parsedScore) ||
+    parsedScore < 0 ||
+    !(photo instanceof File) ||
+    photo.size === 0 ||
+    photo.size > 4 * 1024 * 1024
+  ) {
+    redirect("/?status=error");
+  }
+
+  const contentType = photo.type || "image/jpeg";
+
+  if (!contentType.startsWith("image/")) {
     redirect("/?status=error");
   }
 
   const participant = await createParticipant({
     name,
     gender,
-    phone
+    phone,
+    score: Math.round(parsedScore),
+    photoData: Buffer.from(await photo.arrayBuffer()),
+    photoContentType: contentType,
+    photoFileName: safeText(photo.name) || `${name}-score.jpg`
   });
 
   await setParticipantSession(participant.id);
   revalidatePath("/");
-  redirect("/?status=success");
-}
-
-export async function resetParticipantSessionAction() {
-  await clearParticipantSession();
   redirect("/");
 }
 

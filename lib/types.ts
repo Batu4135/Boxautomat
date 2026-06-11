@@ -7,6 +7,8 @@ export type ParticipantRow = {
   phone: string | null;
   approved: boolean;
   score: number | null;
+  photo_content_type: string | null;
+  photo_filename: string | null;
   created_at: string;
 };
 

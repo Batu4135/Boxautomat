@@ -1,5 +1,3 @@
-import { resetParticipantSessionAction } from "@/app/actions";
-import { FormSubmitButton } from "@/components/form-submit-button";
 import type { ParticipantViewStatus } from "@/lib/types";
 
 type ParticipantStatusCardProps = {
@@ -13,21 +11,16 @@ export function ParticipantStatusCard({
     return (
       <section className="rounded-[2.25rem] border border-amber-300/15 bg-amber-300/10 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.35em] text-amber-100/80">
-          Anfrage Pending
+          Pruefung laeuft
         </p>
         <h1 className="mt-3 font-display text-4xl text-white">
-          Hi {participantStatus.participant.name}, du bist in der Warteschleife
+          Hi {participantStatus.participant.name}, dein Upload wartet auf Freigabe
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-orange-50/90">
-          Deine Anmeldung ist angekommen. Bitte geh jetzt zum Boxautomaten. Das
-          Admin-Team sieht dich in der Warteschlange und traegt deinen Score nach
-          dem Schlag ein.
+          Deine Punktzahl von {participantStatus.participant.score ?? 0} und dein
+          Foto vom Display wurden gespeichert. Das Admin-Team prueft jetzt den
+          Eintrag und schaltet ihn danach fuer die Rangliste frei.
         </p>
-        <form action={resetParticipantSessionAction} className="mt-6">
-          <FormSubmitButton className="cta-button cta-secondary">
-            Andere Person anmelden
-          </FormSubmitButton>
-        </form>
       </section>
     );
   }
@@ -45,11 +38,6 @@ export function ParticipantStatusCard({
           Dein Eintrag ist beim Team sichtbar. Dein Platz erscheint hier sofort,
           sobald dein Score gespeichert wurde.
         </p>
-        <form action={resetParticipantSessionAction} className="mt-6">
-          <FormSubmitButton className="cta-button cta-secondary">
-            Andere Person anmelden
-          </FormSubmitButton>
-        </form>
       </section>
     );
   }
@@ -78,11 +66,6 @@ export function ParticipantStatusCard({
           Abstand nach hinten: {leaderboardEntry.gapToNext ?? 0}
         </div>
       </div>
-      <form action={resetParticipantSessionAction} className="mt-6">
-        <FormSubmitButton className="cta-button cta-secondary">
-          Andere Person anmelden
-        </FormSubmitButton>
-      </form>
     </section>
   );
 }

@@ -83,7 +83,7 @@ async function queryParticipants(whereClause?: Gender) {
 
   if (whereClause) {
     return sql<ParticipantRow[]>`
-      select id, name, gender, phone, approved, score, created_at
+      select id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
       from participants
       where gender = ${whereClause}
       order by approved asc, created_at desc
@@ -91,7 +91,7 @@ async function queryParticipants(whereClause?: Gender) {
   }
 
   return sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
     from participants
     order by approved asc, created_at desc
   `;
@@ -100,7 +100,7 @@ async function queryParticipants(whereClause?: Gender) {
 export async function getLeaderboardParticipants() {
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
     from participants
     where approved = true and score is not null
     order by score desc, created_at asc
@@ -132,12 +132,24 @@ export async function createParticipant(input: {
   name: string;
   gender: Gender;
   phone?: string;
+  score: number;
+  photoData: Buffer;
+  photoContentType: string;
+  photoFileName: string;
 }) {
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    insert into participants (name, gender, phone)
-    values (${input.name}, ${input.gender}, ${input.phone || null})
-    returning id, name, gender, phone, approved, score, created_at
+    insert into participants (name, gender, phone, score, photo_data, photo_content_type, photo_filename)
+    values (
+      ${input.name},
+      ${input.gender},
+      ${input.phone || null},
+      ${input.score},
+      ${input.photoData},
+      ${input.photoContentType},
+      ${input.photoFileName}
+    )
+    returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
   `;
 
   const participant = rows[0];
@@ -160,19 +172,9 @@ export async function approveParticipant(id: string) {
 
 export async function updateParticipantScore(id: string, nextScore: number) {
   const sql = getSql();
-  const existing = await sql<Pick<ParticipantRow, "score">[]>`
-    select score
-    from participants
-    where id = ${id}
-    limit 1
-  `;
-
-  const currentScore = existing[0]?.score ?? 0;
-  const highestScore = Math.max(currentScore, nextScore);
-
   await sql`
     update participants
-    set approved = true, score = ${highestScore}
+    set approved = true, score = ${nextScore}
     where id = ${id}
   `;
 }
@@ -188,13 +190,34 @@ export async function deleteParticipant(id: string) {
 export async function getParticipantById(id: string) {
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
     from participants
     where id = ${id}
     limit 1
   `;
 
   return rows[0] ?? null;
+}
+
+export async function getParticipantPhotoById(id: string) {
+  const sql = getSql();
+  const rows = await sql<Array<{ photo_data: Buffer | null; photo_content_type: string | null }>>`
+    select photo_data, photo_content_type
+    from participants
+    where id = ${id}
+    limit 1
+  `;
+
+  const photo = rows[0];
+
+  if (!photo?.photo_data || !photo.photo_content_type) {
+    return null;
+  }
+
+  return {
+    photo_data: photo.photo_data,
+    photo_content_type: photo.photo_content_type
+  };
 }
 
 export async function getParticipantStatus(id: string) {

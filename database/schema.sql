@@ -7,8 +7,16 @@ create table if not exists public.participants (
   phone text,
   approved boolean not null default false,
   score integer,
+  photo_data bytea,
+  photo_content_type text,
+  photo_filename text,
   created_at timestamptz not null default now()
 );
+
+alter table public.participants
+  add column if not exists photo_data bytea,
+  add column if not exists photo_content_type text,
+  add column if not exists photo_filename text;
 
 create index if not exists participants_leaderboard_idx
   on public.participants (approved, gender, score desc);

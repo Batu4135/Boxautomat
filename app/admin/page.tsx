@@ -1,9 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import {
   adminLoginAction,
   adminLogoutAction,
-  approveParticipantAction,
   deleteParticipantAction,
   updateParticipantScoreAction
 } from "@/app/actions";
@@ -69,6 +69,17 @@ function AdminParticipantCard({
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
+          {participant.photo_content_type ? (
+            <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/20">
+              <Image
+                src={`/api/participant-photo/${participant.id}`}
+                alt={`Score-Foto von ${participant.name}`}
+                width={640}
+                height={420}
+                className="h-44 w-full object-cover sm:h-52 lg:w-80"
+              />
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-2xl text-white">{participant.name}</h2>
             <span className="rounded-full border border-white/15 px-3 py-1 text-xs uppercase tracking-[0.25em] text-orange-100">
@@ -76,47 +87,33 @@ function AdminParticipantCard({
             </span>
             <span
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                participant.score !== null
+                participant.approved
                   ? "bg-emerald-500/20 text-emerald-100"
-                  : participant.approved
-                    ? "bg-sky-500/20 text-sky-100"
-                    : "bg-amber-400/20 text-amber-100"
+                  : "bg-amber-400/20 text-amber-100"
               }`}
             >
-              {participant.score !== null
-                ? "Score gespeichert"
-                : participant.approved
-                  ? "Freigegeben, Score offen"
-                  : "Neu in Warteschlange"}
+              {participant.approved ? "Freigegeben" : "Wartet auf Pruefung"}
             </span>
           </div>
           <p className="text-sm text-orange-50/80">
             Telefon: {participant.phone || "nicht angegeben"}
           </p>
           <p className="text-sm text-orange-50/80">
-            Aktueller Score: {participant.score ?? "noch offen"}
+            Gemeldete Punktzahl: {participant.score ?? "noch offen"}
+          </p>
+          <p className="text-sm text-orange-50/80">
+            Foto: {participant.photo_filename || "kein Dateiname vorhanden"}
           </p>
           <p className="text-xs uppercase tracking-[0.25em] text-orange-200/70">
             Angemeldet am {new Date(participant.created_at).toLocaleString("de-DE")}
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-end">
-          {!participant.approved ? (
-            <form action={approveParticipantAction}>
-              <input type="hidden" name="id" value={participant.id} />
-              <FormSubmitButton className="cta-button cta-secondary w-full">
-                Freigeben
-              </FormSubmitButton>
-            </form>
-          ) : (
-            <div className="hidden sm:block" />
-          )}
-
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <form action={updateParticipantScoreAction} className="grid gap-2 sm:min-w-[15rem]">
             <input type="hidden" name="id" value={participant.id} />
             <label className="text-sm font-medium text-orange-50" htmlFor={`score-${participant.id}`}>
-              Punkte eintragen
+              Punktzahl bestaetigen oder korrigieren
             </label>
             <input
               id={`score-${participant.id}`}
@@ -128,14 +125,14 @@ function AdminParticipantCard({
               defaultValue={participant.score ?? ""}
             />
             <FormSubmitButton className="cta-button cta-primary w-full">
-              Score speichern
+              {participant.approved ? "Score aktualisieren" : "Freigeben & speichern"}
             </FormSubmitButton>
           </form>
 
           <form action={deleteParticipantAction}>
             <input type="hidden" name="id" value={participant.id} />
             <FormSubmitButton className="cta-button w-full border border-red-300/25 bg-red-500/15 text-red-50">
-              Loeschen
+              Ablehnen / loeschen
             </FormSubmitButton>
           </form>
         </div>
@@ -207,7 +204,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </p>
         <h1 className="mt-3 font-display text-4xl text-white">Admin Login</h1>
         <p className="mt-4 text-base leading-7 text-orange-50/85">
-          Hier siehst du sofort, wer in der Warteschlange steht und kannst Punkte speichern.
+          Hier pruefst du neue Uploads mit Foto und gibst die Eintraege fuer die Rangliste frei.
         </p>
 
         {resolvedSearchParams?.login === "error" ? (
@@ -239,13 +236,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   }
 
   const participants = await getAdminParticipants(filter);
-  const waitingParticipants = participants.filter(
-    (participant) => !participant.approved && participant.score === null
-  );
-  const approvedWithoutScore = participants.filter(
-    (participant) => participant.approved && participant.score === null
-  );
-  const scoredParticipants = participants.filter((participant) => participant.score !== null);
+  const waitingParticipants = participants.filter((participant) => !participant.approved);
+  const approvedParticipants = participants.filter((participant) => participant.approved);
 
   return (
     <section className="space-y-6">
@@ -270,21 +262,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-[1.75rem] border border-amber-300/20 bg-amber-300/10 p-5 backdrop-blur">
           <p className="text-xs uppercase tracking-[0.3em] text-amber-100/80">Neu</p>
           <p className="mt-2 font-display text-4xl text-white">{waitingParticipants.length}</p>
-          <p className="mt-2 text-sm text-orange-50/75">Warten auf Freigabe oder Score</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-sky-300/20 bg-sky-400/10 p-5 backdrop-blur">
-          <p className="text-xs uppercase tracking-[0.3em] text-sky-100/80">Offen</p>
-          <p className="mt-2 font-display text-4xl text-white">{approvedWithoutScore.length}</p>
-          <p className="mt-2 text-sm text-orange-50/75">Schon freigegeben, Score fehlt noch</p>
+          <p className="mt-2 text-sm text-orange-50/75">Foto und Score warten auf Pruefung</p>
         </div>
         <div className="rounded-[1.75rem] border border-emerald-300/20 bg-emerald-400/10 p-5 backdrop-blur">
           <p className="text-xs uppercase tracking-[0.3em] text-emerald-100/80">Gespeichert</p>
-          <p className="mt-2 font-display text-4xl text-white">{scoredParticipants.length}</p>
-          <p className="mt-2 text-sm text-orange-50/75">Teilnehmer mit fertigem Score</p>
+          <p className="mt-2 font-display text-4xl text-white">{approvedParticipants.length}</p>
+          <p className="mt-2 text-sm text-orange-50/75">Freigegebene Eintraege in der Rangliste</p>
         </div>
       </div>
 
@@ -301,21 +288,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       <AdminSection
         title="Warteschlange"
-        description="Diese Teilnehmer haben sich gerade eingetragen und warten auf den naechsten Schritt."
+        description="Hier siehst du den gemeldeten Score und das hochgeladene Foto vom Boxautomaten."
         participants={waitingParticipants}
         emphasizeWaiting
       />
 
       <AdminSection
-        title="Freigegeben ohne Score"
-        description="Diese Teilnehmer koennen jederzeit einen eingetragenen Punktestand bekommen."
-        participants={approvedWithoutScore}
-      />
-
-      <AdminSection
         title="Gespeicherte Scores"
-        description="Hier kannst du Werte spaeter noch aktualisieren oder Eintraege loeschen."
-        participants={scoredParticipants}
+        description="Diese Eintraege sind freigegeben. Werte lassen sich hier spaeter noch korrigieren."
+        participants={approvedParticipants}
       />
     </section>
   );
