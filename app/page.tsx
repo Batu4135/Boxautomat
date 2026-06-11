@@ -73,9 +73,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             }
           />
           <LeaderboardTable
-            title="Maenner"
+            title="Männer"
             participants={leaderboard.male}
-            emptyText="Noch keine freigegebenen Scores in der Maenner-Rangliste."
+            emptyText="Noch keine freigegebenen Scores in der Männer-Rangliste."
             highlightParticipantId={
               participantStatus?.participant.gender === "male"
                 ? participantStatus.participant.id

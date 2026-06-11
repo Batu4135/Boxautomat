@@ -53,7 +53,7 @@ export function EventCountdown() {
 
     if (now <= end) {
       return {
-        label: "Laeuft bis",
+        label: "Läuft bis",
         description: "Sonntag, 14. Juni 2026, 17:00 Uhr",
         remaining: end - now
       };
@@ -61,7 +61,7 @@ export function EventCountdown() {
 
     return {
       label: "Wertung geschlossen",
-      description: "Top 3 Frauen und Top 3 Maenner stehen fest.",
+      description: "Top 3 Frauen und Top 3 Männer stehen fest.",
       remaining: 0
     };
   }, [now]);

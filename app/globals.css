@@ -6,7 +6,7 @@
   --panel: rgba(255, 255, 255, 0.08);
   --panel-strong: rgba(255, 255, 255, 0.14);
   --accent: #f56442;
-  --accent-strong: #ff8a4c;
+  --accent-strong: #ffd166;
 }
 
 * {
@@ -26,6 +26,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
   overflow-x: hidden;
+  letter-spacing: -0.01em;
 }
 
 html.onboarding-open,
@@ -49,25 +50,31 @@ select {
 input,
 select {
   width: 100%;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(15, 23, 42, 0.55);
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 18, 31, 0.72);
   padding: 0.95rem 1rem;
   font-size: 16px;
   color: var(--foreground);
   outline: none;
-  transition: border-color 150ms ease, transform 150ms ease, background 150ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 150ms ease,
+    transform 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
 }
 
 input:focus,
 select:focus {
-  border-color: rgba(251, 146, 60, 0.8);
-  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 209, 102, 0.8);
+  background: rgba(12, 24, 40, 0.92);
   transform: translateY(-1px);
+  box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.08);
 }
 
 input::placeholder {
-  color: rgba(255, 247, 237, 0.55);
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .font-display {
@@ -78,10 +85,11 @@ input::placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3.5rem;
+  min-height: 3.6rem;
   border-radius: 9999px;
   padding: 0.95rem 1.4rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
 }
 
@@ -95,13 +103,13 @@ input::placeholder {
 
 .cta-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #fff7ed;
-  box-shadow: 0 16px 40px rgba(245, 100, 66, 0.28);
+  color: #07121f;
+  box-shadow: 0 16px 40px rgba(245, 100, 66, 0.24);
 }
 
 .cta-secondary {
   border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--foreground);
 }
 
@@ -181,6 +189,11 @@ input::placeholder {
 .board-row:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+::selection {
+  background: rgba(255, 209, 102, 0.24);
+  color: white;
 }
 
 .trend-arrow {

@@ -46,7 +46,7 @@ export function LeaderboardTable({
   highlightParticipantId
 }: LeaderboardTableProps) {
   return (
-    <section className="rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,18,31,0.9),rgba(8,14,25,0.82))] p-4 shadow-[0_20px_55px_rgba(2,8,23,0.22)] backdrop-blur sm:p-5">
+    <section className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,18,31,0.92),rgba(8,14,25,0.84))] p-4 shadow-[0_24px_60px_rgba(2,8,23,0.24)] backdrop-blur sm:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/45">Board</p>
