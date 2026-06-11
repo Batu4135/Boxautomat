@@ -20,8 +20,8 @@ export function ParticipantStatusCard({
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-orange-50/90">
           Deine Punktzahl von {participantStatus.participant.score ?? 0} und dein
-          Foto vom Display wurden gespeichert. Fuer dich ist die Platzierung unten
-          schon sichtbar, offiziell wird sie aber erst nach deiner Admin-Freigabe.
+          Foto sind gespeichert. Fuer dich wirkt der Platz unten schon live, offiziell
+          erscheint er aber erst nach der Bildpruefung im Adminbereich.
         </p>
         {participantStatus.leaderboardEntry ? (
           <div className="mt-6 flex flex-wrap gap-3">

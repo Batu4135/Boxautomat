@@ -27,13 +27,16 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
   const [name, setName] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [score, setScore] = useState("");
+  const [photoName, setPhotoName] = useState("");
   const totalSteps = 4;
 
   useEffect(() => {
     document.body.classList.add("onboarding-open");
+    document.documentElement.classList.add("onboarding-open");
 
     return () => {
       document.body.classList.remove("onboarding-open");
+      document.documentElement.classList.remove("onboarding-open");
     };
   }, []);
 
@@ -41,8 +44,12 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
   const canContinueFromStepThree = score.trim() !== "" && Number(score) >= 0;
 
   return (
-    <section className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(30,41,59,0.96))] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:min-h-auto sm:max-w-2xl sm:rounded-[2.5rem] sm:border sm:border-white/10 sm:bg-white/8 sm:px-6 sm:py-6 sm:shadow-[0_30px_80px_rgba(2,6,23,0.45)] sm:backdrop-blur">
+    <section className="relative flex h-[100svh] w-full flex-col overflow-y-auto bg-[linear-gradient(180deg,rgba(15,23,42,0.995),rgba(30,41,59,0.98))] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] [scrollbar-width:none] [-ms-overflow-style:none] sm:h-auto sm:max-h-[calc(100svh-3rem)] sm:max-w-2xl sm:rounded-[2.5rem] sm:border sm:border-white/10 sm:bg-white/8 sm:px-6 sm:py-6 sm:shadow-[0_30px_80px_rgba(2,6,23,0.45)] sm:backdrop-blur [&::-webkit-scrollbar]:hidden">
       <div className="board-grid" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-orange-400/15 to-transparent"
+        aria-hidden="true"
+      />
 
       <div className="relative z-10 flex items-center justify-between gap-3">
         <p className="text-sm font-semibold uppercase tracking-[0.4em] text-orange-200/80">
@@ -70,22 +77,22 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
         action={registerParticipantAction}
         className="relative z-10 mt-4 flex flex-1 flex-col"
       >
-        <div className="flex flex-1 flex-col justify-center">
+        <div className="flex flex-1 flex-col justify-center py-4">
           {currentStep === 1 ? (
             <div className="space-y-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
                   Schritt 1
                 </p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-white">
+                <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                   Wie heisst du?
                 </h1>
-                <p className="mt-4 text-base leading-7 text-orange-50/85">
-                  Gib nur deinen Namen ein. Danach geht es direkt zur naechsten Frage.
+                <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
+                  Gib nur deinen Namen ein. Danach kommt sofort die naechste Frage.
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label htmlFor="name" className="text-sm font-medium text-orange-50">
                   Name
                 </label>
@@ -111,10 +118,10 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
                   Schritt 2
                 </p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-white">
+                <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                   Waehle dein Geschlecht
                 </h1>
-                <p className="mt-4 text-base leading-7 text-orange-50/85">
+                <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
                   Tippe auf die passende Auswahl. Die Rangliste wird danach in die richtige Kategorie einsortiert.
                 </p>
               </div>
@@ -122,7 +129,7 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
               <div className="grid gap-3">
                 <button
                   type="button"
-                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition ${
+                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition active:scale-[0.99] ${
                     gender === "female"
                       ? "border-orange-300 bg-orange-400 text-slate-950"
                       : "border-white/10 bg-white/8 text-white"
@@ -133,7 +140,7 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                 </button>
                 <button
                   type="button"
-                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition ${
+                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition active:scale-[0.99] ${
                     gender === "male"
                       ? "border-orange-300 bg-orange-400 text-slate-950"
                       : "border-white/10 bg-white/8 text-white"
@@ -152,15 +159,15 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
                   Schritt 3
                 </p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-white">
+                <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                   Wie viele Punkte hattest du?
                 </h1>
-                <p className="mt-4 text-base leading-7 text-orange-50/85">
+                <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
                   Trage genau die Punktzahl ein, die auf dem Automaten stand.
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label htmlFor="score" className="text-sm font-medium text-orange-50">
                   Punktzahl
                 </label>
@@ -186,18 +193,27 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
                   Schritt 4
                 </p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-white">
+                <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                   Mach jetzt ein Foto vom Display
                 </h1>
-                <p className="mt-4 text-base leading-7 text-orange-50/85">
-                  Nimm direkt den Score auf dem Automaten auf und lade das Bild hoch.
+                <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
+                  Fotografiere direkt den Score auf dem Automaten und lade das Bild hoch.
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="photo" className="text-sm font-medium text-orange-50">
-                  Foto vom Score
-                </label>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/8 p-4">
+                <div className="mb-4 flex flex-wrap gap-2 text-sm text-orange-50/85">
+                  <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
+                    {name || "Name"}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
+                    {gender === "female" ? "Frau" : "Mann"}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
+                    {score || "0"} Punkte
+                  </span>
+                </div>
+
                 <input
                   id="photo"
                   name="photo"
@@ -205,10 +221,25 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                   accept="image/*"
                   capture="environment"
                   required
+                  className="sr-only"
+                  onChange={(event) =>
+                    setPhotoName(event.target.files?.[0]?.name ?? "")
+                  }
                 />
-                <p className="text-xs uppercase tracking-[0.25em] text-orange-200/70">
-                  Maximal 4 MB, Kamera oder Galerie
-                </p>
+                <label
+                  htmlFor="photo"
+                  className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-orange-300/45 bg-black/20 px-5 py-6 text-center transition active:scale-[0.99]"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
+                    Foto vom Score
+                  </span>
+                  <span className="mt-3 font-display text-2xl text-white">
+                    {photoName ? "Foto ausgewaehlt" : "Kamera oeffnen oder Bild waehlen"}
+                  </span>
+                  <span className="mt-3 text-sm leading-6 text-orange-50/80">
+                    {photoName || "Maximal 4 MB. Kamera oder Galerie."}
+                  </span>
+                </label>
               </div>
 
               <input type="hidden" name="name" value={name} />
@@ -219,7 +250,7 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
           ) : null}
         </div>
 
-        <div className="relative z-10 mt-6 space-y-3">
+        <div className="relative z-10 mt-auto space-y-3 pb-1 pt-6">
           {currentStep === 1 ? (
             <button
               type="button"
