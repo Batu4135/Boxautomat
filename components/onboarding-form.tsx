@@ -10,6 +10,9 @@ type OnboardingFormProps = {
   hasError?: boolean;
 };
 
+const MOBILE_UPLOAD_TARGET_BYTES = 1_500_000;
+const MAX_UPLOAD_BYTES = 4_000_000;
+
 function StepBadge({ step, active }: { step: string; active: boolean }) {
   return (
     <div
@@ -22,12 +25,86 @@ function StepBadge({ step, active }: { step: string; active: boolean }) {
   );
 }
 
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl);
+      reject(new Error("Bild konnte nicht geladen werden."));
+    };
+
+    image.src = imageUrl;
+  });
+}
+
+async function compressPhotoForUpload(file: File) {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  if (file.size <= MOBILE_UPLOAD_TARGET_BYTES) {
+    return file;
+  }
+
+  const image = await loadImage(file);
+  const ratio = Math.min(1, 1600 / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * ratio));
+  const height = Math.max(1, Math.round(image.height * ratio));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Bild konnte nicht vorbereitet werden.");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+
+  let quality = 0.82;
+  let blob: Blob | null = null;
+
+  while (quality >= 0.45) {
+    blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", quality);
+    });
+
+    if (!blob) {
+      break;
+    }
+
+    if (blob.size <= MOBILE_UPLOAD_TARGET_BYTES) {
+      break;
+    }
+
+    quality -= 0.12;
+  }
+
+  if (!blob) {
+    throw new Error("Bild konnte nicht vorbereitet werden.");
+  }
+
+  return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+    type: "image/jpeg",
+    lastModified: Date.now()
+  });
+}
+
 export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [name, setName] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [score, setScore] = useState("");
   const [photoName, setPhotoName] = useState("");
+  const [isPreparingUpload, setIsPreparingUpload] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
   const totalSteps = 4;
 
   useEffect(() => {
@@ -42,6 +119,51 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
 
   const canContinueFromStepOne = name.trim().length >= 2;
   const canContinueFromStepThree = score.trim() !== "" && Number(score) >= 0;
+
+  async function handleSubmit(formData: FormData) {
+    setClientError(null);
+    setIsPreparingUpload(true);
+
+    try {
+      const currentPhoto = formData.get("photo");
+
+      if (!(currentPhoto instanceof File) || currentPhoto.size === 0) {
+        setClientError("Bitte waehle ein Foto vom Score aus.");
+        setIsPreparingUpload(false);
+        return;
+      }
+
+      if (!currentPhoto.type.startsWith("image/")) {
+        setClientError("Bitte lade nur ein Bild hoch.");
+        setIsPreparingUpload(false);
+        return;
+      }
+
+      const preparedPhoto = await compressPhotoForUpload(currentPhoto);
+
+      if (preparedPhoto.size > MAX_UPLOAD_BYTES) {
+        setClientError(
+          "Das Foto ist noch zu gross. Bitte gehe naeher ans Display oder waehle ein kleineres Bild."
+        );
+        setIsPreparingUpload(false);
+        return;
+      }
+
+      formData.set("photo", preparedPhoto);
+    } catch {
+      setClientError(
+        "Das Foto konnte gerade nicht gesendet werden. Bitte versuche es noch einmal."
+      );
+      setIsPreparingUpload(false);
+      return;
+    }
+
+    try {
+      await registerParticipantAction(formData);
+    } finally {
+      setIsPreparingUpload(false);
+    }
+  }
 
   return (
     <section className="relative flex h-[100svh] w-full flex-col overflow-y-auto bg-[linear-gradient(180deg,rgba(15,23,42,0.995),rgba(30,41,59,0.98))] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] [scrollbar-width:none] [-ms-overflow-style:none] sm:h-auto sm:max-h-[calc(100svh-3rem)] sm:max-w-2xl sm:rounded-[2.5rem] sm:border sm:border-white/10 sm:bg-white/8 sm:px-6 sm:py-6 sm:shadow-[0_30px_80px_rgba(2,6,23,0.45)] sm:backdrop-blur [&::-webkit-scrollbar]:hidden">
@@ -69,14 +191,15 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
 
       {hasError ? (
         <div className="status-card status-error relative z-10 mt-4">
-          Bitte pruefe Name, Geschlecht, Punktzahl und das Foto. Bilder duerfen maximal 4 MB gross sein.
+          Bitte pruefe Name, Geschlecht, Punktzahl und das Foto. Bei grossen Handyfotos wird das Bild automatisch verkleinert.
         </div>
       ) : null}
 
-      <form
-        action={registerParticipantAction}
-        className="relative z-10 mt-4 flex flex-1 flex-col"
-      >
+      {clientError ? (
+        <div className="status-card status-error relative z-10 mt-4">{clientError}</div>
+      ) : null}
+
+      <form action={handleSubmit} className="relative z-10 mt-4 flex flex-1 flex-col">
         <div className="flex flex-1 flex-col justify-center py-4">
           {currentStep === 1 ? (
             <div className="space-y-6">
@@ -237,7 +360,7 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
                     {photoName ? "Foto ausgewaehlt" : "Kamera oeffnen oder Bild waehlen"}
                   </span>
                   <span className="mt-3 text-sm leading-6 text-orange-50/80">
-                    {photoName || "Maximal 4 MB. Kamera oder Galerie."}
+                    {photoName || "Handyfotos werden automatisch fuer den Upload verkleinert."}
                   </span>
                 </label>
               </div>
@@ -305,11 +428,14 @@ export function OnboardingForm({ hasError = false }: OnboardingFormProps) {
           {currentStep === 4 ? (
             <>
               <FormSubmitButton className="cta-button cta-primary w-full">
-                Foto absenden und Rangliste ansehen
+                {isPreparingUpload
+                  ? "Foto wird vorbereitet..."
+                  : "Foto absenden und Rangliste ansehen"}
               </FormSubmitButton>
               <button
                 type="button"
                 className="cta-button cta-secondary w-full"
+                disabled={isPreparingUpload}
                 onClick={() => setCurrentStep(3)}
               >
                 Zurueck
