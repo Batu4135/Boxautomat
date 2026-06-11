@@ -7,36 +7,36 @@ type LeaderboardTableProps = {
   highlightParticipantId?: string;
 };
 
-function placementStyle(rank: number) {
+function RewardIcon({ rank }: { rank: number }) {
   if (rank === 1) {
-    return "border-yellow-300/25 bg-yellow-300/10";
+    return <span className="text-2xl opacity-45">🏆</span>;
   }
 
   if (rank === 2) {
-    return "border-sky-300/25 bg-sky-300/10";
+    return <span className="text-2xl opacity-55">🍽️🥤</span>;
   }
 
   if (rank === 3) {
-    return "border-emerald-300/25 bg-emerald-300/10";
+    return <span className="text-2xl opacity-55">🍰🥤</span>;
   }
 
-  return "border-white/8 bg-white/[0.04]";
+  return <span className="text-sm font-semibold text-white/45">{rank}.</span>;
 }
 
-function placementLabel(rank: number) {
+function rowStyle(rank: number) {
   if (rank === 1) {
-    return "1.";
+    return "border-[#ffd166]/30 bg-[linear-gradient(135deg,rgba(255,209,102,0.14),rgba(255,255,255,0.04))]";
   }
 
   if (rank === 2) {
-    return "2.";
+    return "border-cyan-300/25 bg-[linear-gradient(135deg,rgba(125,211,252,0.12),rgba(255,255,255,0.04))]";
   }
 
   if (rank === 3) {
-    return "3.";
+    return "border-emerald-300/25 bg-[linear-gradient(135deg,rgba(110,231,183,0.12),rgba(255,255,255,0.04))]";
   }
 
-  return `${rank}.`;
+  return "border-white/8 bg-white/[0.035]";
 }
 
 export function LeaderboardTable({
@@ -46,19 +46,19 @@ export function LeaderboardTable({
   highlightParticipantId
 }: LeaderboardTableProps) {
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,18,31,0.92),rgba(8,14,25,0.84))] p-4 shadow-[0_24px_60px_rgba(2,8,23,0.24)] backdrop-blur sm:p-5">
+    <section className="app-panel overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/45">Board</p>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-white/40">Board</p>
           <h2 className="mt-2 font-display text-2xl text-white">{title}</h2>
         </div>
-        <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs uppercase tracking-[0.25em] text-white/65">
+        <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/65">
           {participants.length}
         </div>
       </div>
 
       {participants.length === 0 ? (
-        <div className="rounded-[1.3rem] border border-dashed border-white/10 bg-white/[0.03] px-4 py-8 text-sm text-white/50">
+        <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/[0.03] px-4 py-8 text-sm text-white/50">
           {emptyText}
         </div>
       ) : (
@@ -69,14 +69,14 @@ export function LeaderboardTable({
             return (
               <article
                 key={participant.id}
-                className={`board-row flex items-center gap-3 rounded-[1.3rem] border px-3 py-3 ${
+                className={`board-row flex items-center gap-3 rounded-[1.45rem] border px-3 py-3.5 ${
                   highlighted
-                    ? "border-orange-300/35 bg-orange-300/12"
-                    : placementStyle(participant.rank)
+                    ? "border-[#ffd166]/35 bg-[linear-gradient(135deg,rgba(255,209,102,0.16),rgba(255,255,255,0.05))]"
+                    : rowStyle(participant.rank)
                 }`}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/20 text-sm font-semibold text-white">
-                  {placementLabel(participant.rank)}
+                <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-[1rem] border border-white/10 bg-black/18">
+                  <RewardIcon rank={participant.rank} />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -85,15 +85,18 @@ export function LeaderboardTable({
                       {participant.name}
                     </p>
                     {highlighted ? (
-                      <span className="rounded-full border border-orange-200/25 bg-orange-200/14 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-orange-100">
+                      <span className="rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-[#ffe4a4]">
                         Du
                       </span>
                     ) : null}
                   </div>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-white/38">
+                    Platz {participant.rank}
+                  </p>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/40">Punkte</p>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/35">Punkte</p>
                   <p className="mt-1 text-lg font-semibold text-white sm:text-xl">
                     {participant.score}
                   </p>

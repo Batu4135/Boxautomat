@@ -176,6 +176,23 @@ export async function getLeaderboardParticipants() {
   };
 }
 
+export async function getParticipantSummary() {
+  const sql = getSql();
+  const rows = await sql<Array<{ name: string; gender: Gender }>>`
+    select name, gender
+    from participants
+  `;
+
+  const uniqueParticipants = new Set(
+    rows.map((participant) => normalizeParticipantKey(participant.name, participant.gender))
+  );
+
+  return {
+    participantCount: uniqueParticipants.size,
+    entryCount: rows.length
+  };
+}
+
 export async function getAdminParticipants(filter: Gender | "all" = "all") {
   return filter === "all" ? queryParticipants() : queryParticipants(filter);
 }
