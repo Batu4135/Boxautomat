@@ -34,6 +34,17 @@ function safeReturnPath(value: FormDataEntryValue | null) {
   return resolved;
 }
 
+function withQuery(path: string, query: Record<string, string>) {
+  const url = new URL(path, "https://boxautomat.local");
+
+  for (const [key, value] of Object.entries(query)) {
+    url.searchParams.set(key, value);
+  }
+
+  const search = url.searchParams.toString();
+  return `${url.pathname}${search ? `?${search}` : ""}`;
+}
+
 export async function registerParticipantAction(formData: FormData) {
   const name = safeText(formData.get("name"));
   const gender = parseGender(formData.get("gender"));
@@ -53,13 +64,13 @@ export async function registerParticipantAction(formData: FormData) {
     photo.size === 0 ||
     photo.size > 4 * 1024 * 1024
   ) {
-    redirect(`${returnTo}?submit=1&status=error`);
+    redirect(withQuery(returnTo, { submit: "1", status: "error" }));
   }
 
   const contentType = photo.type || "image/jpeg";
 
   if (!contentType.startsWith("image/")) {
-    redirect(`${returnTo}?submit=1&status=error`);
+    redirect(withQuery(returnTo, { submit: "1", status: "error" }));
   }
 
   const participant = await createParticipant({

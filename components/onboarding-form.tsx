@@ -116,7 +116,7 @@ export function OnboardingForm({
   const [photoName, setPhotoName] = useState("");
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   useEffect(() => {
     document.body.classList.add("onboarding-open");
@@ -128,8 +128,9 @@ export function OnboardingForm({
     };
   }, []);
 
-  const canContinueFromStepOne = name.trim().length >= 2;
-  const canContinueFromStepThree = score.trim() !== "" && Number(score) >= 0;
+  const canContinueFromStepOne = photoName.trim().length > 0;
+  const canContinueFromStepTwo = score.trim() !== "" && Number(score) >= 0;
+  const canSubmit = name.trim().length >= 2 && !!gender;
 
   async function handleSubmit(formData: FormData) {
     setClientError(null);
@@ -204,10 +205,9 @@ export function OnboardingForm({
       </div>
 
       <div className="relative z-10 mt-4 flex flex-wrap gap-2">
-        <StepBadge step="Name" active={currentStep === 1} />
-        <StepBadge step="Geschlecht" active={currentStep === 2} />
-        <StepBadge step="Punkte" active={currentStep === 3} />
-        <StepBadge step="Foto" active={currentStep === 4} />
+        <StepBadge step="Foto" active={currentStep === 1} />
+        <StepBadge step="Punkte" active={currentStep === 2} />
+        <StepBadge step="Name" active={currentStep === 3} />
       </div>
 
       {hasError ? (
@@ -229,29 +229,40 @@ export function OnboardingForm({
                   Schritt 1
                 </p>
                 <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                  Wie heisst du?
+                  Lade dein Bild hoch
                 </h1>
                 <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
-                  Gib nur deinen Namen ein. Danach kommt sofort die naechste Frage.
+                  Fotografiere direkt den Score auf dem Automaten oder waehle das Bild aus deiner Galerie.
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <label htmlFor="name" className="text-sm font-medium text-orange-50">
-                  Name
-                </label>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/8 p-4">
                 <input
-                  id="name"
-                  name="name_visible"
-                  type="text"
+                  id="photo"
+                  name="photo"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
                   required
-                  minLength={2}
-                  maxLength={80}
-                  placeholder="Dein Name"
-                  autoFocus
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  className="sr-only"
+                  onChange={(event) =>
+                    setPhotoName(event.target.files?.[0]?.name ?? "")
+                  }
                 />
+                <label
+                  htmlFor="photo"
+                  className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-orange-300/45 bg-black/20 px-5 py-6 text-center transition active:scale-[0.99]"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
+                    Score Foto
+                  </span>
+                  <span className="mt-3 font-display text-2xl text-white">
+                    {photoName ? "Bild ausgewaehlt" : "Kamera oeffnen oder Bild waehlen"}
+                  </span>
+                  <span className="mt-3 text-sm leading-6 text-orange-50/80">
+                    {photoName || "Handyfotos werden automatisch fuer den Upload verkleinert."}
+                  </span>
+                </label>
               </div>
             </div>
           ) : null}
@@ -263,48 +274,7 @@ export function OnboardingForm({
                   Schritt 2
                 </p>
                 <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                  Waehle dein Geschlecht
-                </h1>
-                <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
-                  Tippe auf die passende Auswahl. Die Rangliste wird danach in die richtige Kategorie einsortiert.
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition active:scale-[0.99] ${
-                    gender === "female"
-                      ? "border-orange-300 bg-orange-400 text-slate-950"
-                      : "border-white/10 bg-white/8 text-white"
-                  }`}
-                  onClick={() => setGender("female")}
-                >
-                  Frau
-                </button>
-                <button
-                  type="button"
-                  className={`rounded-[1.75rem] border px-5 py-6 text-left text-xl font-semibold transition active:scale-[0.99] ${
-                    gender === "male"
-                      ? "border-orange-300 bg-orange-400 text-slate-950"
-                      : "border-white/10 bg-white/8 text-white"
-                  }`}
-                  onClick={() => setGender("male")}
-                >
-                  Mann
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {currentStep === 3 ? (
-            <div className="space-y-6">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
-                  Schritt 3
-                </p>
-                <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                  Wie viele Punkte hattest du?
+                  Wie viele Punkte?
                 </h1>
                 <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
                   Trage genau die Punktzahl ein, die auf dem Automaten stand.
@@ -335,55 +305,68 @@ export function OnboardingForm({
             <div className="space-y-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
-                  Schritt 4
+                  Schritt 3
                 </p>
                 <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                  Mach jetzt ein Foto vom Display
+                  Dein Name
                 </h1>
                 <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
-                  Fotografiere direkt den Score auf dem Automaten und lade das Bild hoch.
+                  Trage deinen Namen ein und waehle die passende Rangliste aus.
                 </p>
               </div>
 
               <div className="rounded-[1.75rem] border border-white/10 bg-white/8 p-4">
                 <div className="mb-4 flex flex-wrap gap-2 text-sm text-orange-50/85">
                   <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
-                    {name || "Name"}
-                  </span>
-                  <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
-                    {gender === "female" ? "Frau" : "Mann"}
+                    {photoName ? "Bild bereit" : "Kein Bild"}
                   </span>
                   <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1">
                     {score || "0"} Punkte
                   </span>
                 </div>
 
-                <input
-                  id="photo"
-                  name="photo"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  required
-                  className="sr-only"
-                  onChange={(event) =>
-                    setPhotoName(event.target.files?.[0]?.name ?? "")
-                  }
-                />
-                <label
-                  htmlFor="photo"
-                  className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-orange-300/45 bg-black/20 px-5 py-6 text-center transition active:scale-[0.99]"
-                >
-                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
-                    Foto vom Score
-                  </span>
-                  <span className="mt-3 font-display text-2xl text-white">
-                    {photoName ? "Foto ausgewaehlt" : "Kamera oeffnen oder Bild waehlen"}
-                  </span>
-                  <span className="mt-3 text-sm leading-6 text-orange-50/80">
-                    {photoName || "Handyfotos werden automatisch fuer den Upload verkleinert."}
-                  </span>
-                </label>
+                <div className="space-y-3">
+                  <label htmlFor="name" className="text-sm font-medium text-orange-50">
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    name="name_visible"
+                    type="text"
+                    required
+                    minLength={2}
+                    maxLength={80}
+                    placeholder="Dein Name"
+                    autoFocus
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    className={`rounded-[1.4rem] border px-4 py-5 text-left text-lg font-semibold transition active:scale-[0.99] ${
+                      gender === "female"
+                        ? "border-orange-300 bg-orange-400 text-slate-950"
+                        : "border-white/10 bg-black/20 text-white"
+                    }`}
+                    onClick={() => setGender("female")}
+                  >
+                    Frauen-Rangliste
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-[1.4rem] border px-4 py-5 text-left text-lg font-semibold transition active:scale-[0.99] ${
+                      gender === "male"
+                        ? "border-orange-300 bg-orange-400 text-slate-950"
+                        : "border-white/10 bg-black/20 text-white"
+                    }`}
+                    onClick={() => setGender("male")}
+                  >
+                    Maenner-Rangliste
+                  </button>
+                </div>
               </div>
 
               <input type="hidden" name="name" value={name} />
@@ -411,7 +394,7 @@ export function OnboardingForm({
             <>
               <button
                 type="button"
-                disabled={!gender}
+                disabled={!canContinueFromStepTwo}
                 className="cta-button cta-primary w-full disabled:opacity-60"
                 onClick={() => setCurrentStep(3)}
               >
@@ -429,36 +412,19 @@ export function OnboardingForm({
 
           {currentStep === 3 ? (
             <>
-              <button
-                type="button"
-                disabled={!canContinueFromStepThree}
-                className="cta-button cta-primary w-full disabled:opacity-60"
-                onClick={() => setCurrentStep(4)}
+              <FormSubmitButton
+                className="cta-button cta-primary w-full"
+                disabled={!canSubmit || isPreparingUpload}
               >
-                Weiter
-              </button>
-              <button
-                type="button"
-                className="cta-button cta-secondary w-full"
-                onClick={() => setCurrentStep(2)}
-              >
-                Zurueck
-              </button>
-            </>
-          ) : null}
-
-          {currentStep === 4 ? (
-            <>
-              <FormSubmitButton className="cta-button cta-primary w-full">
                 {isPreparingUpload
-                  ? "Foto wird vorbereitet..."
-                  : "Foto absenden und Rangliste ansehen"}
+                  ? "Eintrag wird vorbereitet..."
+                  : "Speichern und Rangliste ansehen"}
               </FormSubmitButton>
               <button
                 type="button"
                 className="cta-button cta-secondary w-full"
                 disabled={isPreparingUpload}
-                onClick={() => setCurrentStep(3)}
+                onClick={() => setCurrentStep(2)}
               >
                 Zurueck
               </button>

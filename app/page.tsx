@@ -1,8 +1,7 @@
+import { EventCountdown } from "@/components/event-countdown";
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
-import { LiveTicker } from "@/components/live-ticker";
 import { OnboardingForm } from "@/components/onboarding-form";
-import { ParticipantStatusCard } from "@/components/participant-status-card";
 import { ScoreEntryButton } from "@/components/score-entry-button";
 import { getParticipantSession } from "@/lib/auth";
 import { getMissingEnvVars, hasRequiredEnvVars } from "@/lib/env";
@@ -16,6 +15,7 @@ type HomePageProps = {
   searchParams?: Promise<{
     status?: string;
     submit?: string;
+    view?: string;
   }>;
 };
 
@@ -36,8 +36,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     await getLeaderboardParticipants(),
     participantStatus
   );
+  const boardOnly = resolvedSearchParams?.view === "board";
   const showSubmitFlow =
-    resolvedSearchParams?.submit === "1" || resolvedSearchParams?.status === "error";
+    resolvedSearchParams?.submit === "1" ||
+    resolvedSearchParams?.status === "error" ||
+    !boardOnly;
 
   return (
     <>
@@ -46,8 +49,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="mx-auto flex h-full max-w-2xl items-stretch justify-center sm:p-6">
             <OnboardingForm
               hasError={resolvedSearchParams?.status === "error"}
-              closeHref="/"
-              returnTo="/"
+              closeHref="/?view=board"
+              returnTo="/?view=board"
               defaultName={participantStatus?.participant.name}
               defaultGender={participantStatus?.participant.gender ?? ""}
             />
@@ -56,10 +59,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       ) : null}
 
       <section className="space-y-5 pb-24">
-        <ParticipantStatusCard participantStatus={participantStatus} />
-        <LiveTicker participants={leaderboard.all.slice(0, 8)} />
+        <EventCountdown />
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5">
+        <div className="grid gap-4 md:grid-cols-2">
           <LeaderboardTable
             title="Frauen"
             participants={leaderboard.female}
@@ -83,7 +85,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      <ScoreEntryButton href="/?submit=1" />
+      <ScoreEntryButton href="/?view=board&submit=1" />
     </>
   );
 }
