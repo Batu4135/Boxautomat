@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-import { deleteOwnedParticipantAction } from "@/app/actions";
-import { FormSubmitButton } from "@/components/form-submit-button";
+import { OwnedDeleteForm } from "@/components/owned-delete-form";
 import type { ParticipantRow, ParticipantViewStatus } from "@/lib/types";
 
 type OwnedEntriesPanelProps = {
@@ -90,7 +89,7 @@ export function OwnedEntriesPanel({ entries, statuses, returnTo }: OwnedEntriesP
                 </span>
               </div>
               <p className="mt-1 text-xs text-white/55">
-                {entry.gender === "female" ? "Frauen" : "Männer"} · {entry.score ?? 0} Punkte ·{" "}
+                {entry.gender === "female" ? "Damen" : "Männer"} · {entry.score ?? 0} Punkte ·{" "}
                 {getPlacementText(statusById.get(entry.id))}
               </p>
             </div>
@@ -103,13 +102,9 @@ export function OwnedEntriesPanel({ entries, statuses, returnTo }: OwnedEntriesP
               <PencilIcon />
             </Link>
 
-            <form action={deleteOwnedParticipantAction}>
-              <input type="hidden" name="id" value={entry.id} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <FormSubmitButton className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-300/20 bg-rose-500/10 text-rose-100 transition hover:bg-rose-500/15">
-                <TrashIcon />
-              </FormSubmitButton>
-            </form>
+            <OwnedDeleteForm id={entry.id} returnTo={returnTo}>
+              <TrashIcon />
+            </OwnedDeleteForm>
           </article>
         ))}
       </div>

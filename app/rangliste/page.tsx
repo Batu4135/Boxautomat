@@ -7,10 +7,10 @@ import { ScoreEntryButton } from "@/components/score-entry-button";
 import { getOwnedParticipantIds, getParticipantSession } from "@/lib/auth";
 import { getMissingEnvVars, hasRequiredEnvVars } from "@/lib/env";
 import {
-  getParticipantById,
   getLeaderboardParticipants,
-  getParticipantsByIds,
+  getParticipantById,
   getParticipantPerspectiveLeaderboard,
+  getParticipantsByIds,
   getParticipantStatus,
   getParticipantSummary
 } from "@/lib/participants";
@@ -84,9 +84,9 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
 
         <div className="grid gap-4 md:grid-cols-2">
           <LeaderboardTable
-            title="Frauen"
+            title="Damen"
             participants={leaderboard.female}
-            emptyText="Noch keine freigegebenen Scores in der Frauen-Rangliste."
+            emptyText="Noch keine freigegebenen Scores in der Damen-Rangliste."
             highlightParticipantIds={ownedHighlights}
           />
           <LeaderboardTable
@@ -97,7 +97,11 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           />
         </div>
 
-        <OwnedEntriesPanel entries={ownedParticipants} statuses={ownedStatuses} returnTo="/rangliste" />
+        <OwnedEntriesPanel
+          entries={ownedParticipants}
+          statuses={ownedStatuses}
+          returnTo="/rangliste"
+        />
       </section>
 
       <ScoreEntryButton href="/rangliste?submit=1" />
