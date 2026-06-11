@@ -78,6 +78,58 @@ function buildLeaderboard(rows: ParticipantRow[]) {
   });
 }
 
+function buildProjectedLeaderboard(
+  approvedParticipants: LeaderboardParticipant[],
+  participant: ParticipantRow
+) {
+  const boardRows: ParticipantRow[] = approvedParticipants.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    gender: entry.gender,
+    phone: entry.phone,
+    approved: entry.approved,
+    score: entry.score,
+    photo_content_type: entry.photo_content_type,
+    photo_filename: entry.photo_filename,
+    created_at: entry.created_at
+  }));
+
+  boardRows.push(participant);
+
+  return buildLeaderboard(boardRows);
+}
+
+export function getParticipantPerspectiveLeaderboard(
+  leaderboard: Awaited<ReturnType<typeof getLeaderboardParticipants>>,
+  participantStatus: ParticipantViewStatus | null
+) {
+  if (!participantStatus || participantStatus.state !== "pending" || !participantStatus.leaderboardEntry) {
+    return leaderboard;
+  }
+
+  const relevantBoard =
+    participantStatus.participant.gender === "female" ? leaderboard.female : leaderboard.male;
+  const projectedBoard = buildProjectedLeaderboard(relevantBoard, participantStatus.participant);
+
+  return {
+    ...leaderboard,
+    female: participantStatus.participant.gender === "female" ? projectedBoard : leaderboard.female,
+    male: participantStatus.participant.gender === "male" ? projectedBoard : leaderboard.male,
+    all: [
+      ...(participantStatus.participant.gender === "female" ? projectedBoard : leaderboard.female),
+      ...(participantStatus.participant.gender === "male" ? projectedBoard : leaderboard.male)
+    ].sort((left, right) => {
+      const scoreDelta = (right.score ?? 0) - (left.score ?? 0);
+
+      if (scoreDelta !== 0) {
+        return scoreDelta;
+      }
+
+      return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
+    })
+  };
+}
+
 async function queryParticipants(whereClause?: Gender) {
   const sql = getSql();
 
@@ -228,9 +280,23 @@ export async function getParticipantStatus(id: string) {
   }
 
   if (!participant.approved) {
+    const leaderboard = await getLeaderboardParticipants();
+    const relevantBoard = participant.gender === "female" ? leaderboard.female : leaderboard.male;
+    const projectedBoard =
+      participant.score !== null ? buildProjectedLeaderboard(relevantBoard, participant) : [];
+    const participantKey = normalizeParticipantKey(participant.name, participant.gender);
+    const leaderboardEntry =
+      participant.score !== null
+        ? projectedBoard.find(
+            (entry) => normalizeParticipantKey(entry.name, entry.gender) === participantKey
+          ) ?? null
+        : null;
+
     return {
       state: "pending",
-      participant
+      participant,
+      leaderboardEntry,
+      total: projectedBoard.length
     } satisfies ParticipantViewStatus;
   }
 

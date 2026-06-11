@@ -24,6 +24,8 @@ export type ParticipantViewStatus =
   | {
       state: "pending";
       participant: ParticipantRow;
+      leaderboardEntry: LeaderboardParticipant | null;
+      total: number;
     }
   | {
       state: "approved";

@@ -2,12 +2,15 @@ import Link from "next/link";
 
 import { EnvSetupCard } from "@/components/env-setup-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
-import { LiveTicker } from "@/components/live-ticker";
 import { OnboardingForm } from "@/components/onboarding-form";
 import { ParticipantStatusCard } from "@/components/participant-status-card";
 import { getParticipantSession } from "@/lib/auth";
 import { getMissingEnvVars, hasRequiredEnvVars } from "@/lib/env";
-import { getLeaderboardParticipants, getParticipantStatus } from "@/lib/participants";
+import {
+  getLeaderboardParticipants,
+  getParticipantPerspectiveLeaderboard,
+  getParticipantStatus
+} from "@/lib/participants";
 
 type HomePageProps = {
   searchParams?: Promise<{
@@ -29,8 +32,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ? await getParticipantStatus(participantSession)
     : null;
   const needsOnboarding = !participantStatus;
-  const leaderboard = await getLeaderboardParticipants();
-  const liveEntries = leaderboard.all.slice(0, 8);
+  const leaderboard = getParticipantPerspectiveLeaderboard(
+    await getLeaderboardParticipants(),
+    participantStatus
+  );
 
   return (
     <>
@@ -60,8 +65,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
           </section>
         )}
-
-        <LiveTicker participants={liveEntries} />
 
         <div className="grid gap-6 xl:grid-cols-2">
           <LeaderboardTable

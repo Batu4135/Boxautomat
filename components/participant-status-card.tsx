@@ -11,16 +11,31 @@ export function ParticipantStatusCard({
     return (
       <section className="rounded-[2.25rem] border border-amber-300/15 bg-amber-300/10 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.35em] text-amber-100/80">
-          Pruefung laeuft
+          Vorlaeufig aufgenommen
         </p>
         <h1 className="mt-3 font-display text-4xl text-white">
-          Hi {participantStatus.participant.name}, dein Upload wartet auf Freigabe
+          {participantStatus.leaderboardEntry
+            ? `Aktuell waerst du auf Platz #${participantStatus.leaderboardEntry.rank}`
+            : `Hi ${participantStatus.participant.name}, dein Upload wartet auf Freigabe`}
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-orange-50/90">
           Deine Punktzahl von {participantStatus.participant.score ?? 0} und dein
-          Foto vom Display wurden gespeichert. Das Admin-Team prueft jetzt den
-          Eintrag und schaltet ihn danach fuer die Rangliste frei.
+          Foto vom Display wurden gespeichert. Fuer dich ist die Platzierung unten
+          schon sichtbar, offiziell wird sie aber erst nach deiner Admin-Freigabe.
         </p>
+        {participantStatus.leaderboardEntry ? (
+          <div className="mt-6 flex flex-wrap gap-3">
+            <div className="rounded-full border border-white/15 bg-black/20 px-4 py-2 text-sm text-orange-50">
+              Vorlaeufiger Platz: #{participantStatus.leaderboardEntry.rank}
+            </div>
+            <div className="rounded-full border border-white/15 bg-black/20 px-4 py-2 text-sm text-orange-50">
+              Punkte: {participantStatus.leaderboardEntry.score}
+            </div>
+            <div className="rounded-full border border-white/15 bg-black/20 px-4 py-2 text-sm text-orange-50">
+              Teilnehmende: {participantStatus.total}
+            </div>
+          </div>
+        ) : null}
       </section>
     );
   }
