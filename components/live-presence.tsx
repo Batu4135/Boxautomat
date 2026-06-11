@@ -48,13 +48,21 @@ export function LivePresence({
         <div className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85">
           Teilnehmerzahl {participantCount}
         </div>
-        {bestRank ? (
-          <div className="rounded-full border border-[#ffd166]/20 bg-[#ffd166]/10 px-4 py-2 text-sm text-[#ffe4a4]">
-            Dein bester Platz #{bestRank}
-            {bestLabel ? ` · ${bestLabel}` : ""}
-          </div>
-        ) : null}
       </div>
+
+      {bestRank ? (
+        <div className="w-full rounded-[1.75rem] border border-[#ffd166]/18 bg-[linear-gradient(135deg,rgba(255,209,102,0.16),rgba(255,255,255,0.03))] px-5 py-5 shadow-[0_16px_40px_rgba(255,209,102,0.08)]">
+          <p className="text-[11px] uppercase tracking-[0.34em] text-[#ffe4a4]/70">
+            Dein bester Rang
+          </p>
+          <p className="mt-2 font-display text-4xl leading-none text-[#fff1c7] sm:text-5xl">
+            Platz #{bestRank}
+          </p>
+          {bestLabel ? (
+            <p className="mt-3 text-sm font-medium text-[#ffe4a4]/88 sm:text-base">{bestLabel}</p>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }
