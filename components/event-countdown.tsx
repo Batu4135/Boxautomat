@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 const EVENT_START = "2026-06-12T12:00:00+02:00";
-const EVENT_END = "2026-06-14T17:00:00+02:00";
+const EVENT_END = "2026-06-14T16:00:00+02:00";
 
 function formatInline(milliseconds: number) {
   const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
@@ -41,7 +41,7 @@ export function EventCountdown() {
     if (now <= end) {
       return {
         label: "Läuft bis",
-        detail: "So 17:00",
+        detail: "So 16:00",
         remaining: end - now
       };
     }
