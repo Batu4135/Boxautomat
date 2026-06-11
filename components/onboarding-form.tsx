@@ -22,8 +22,6 @@ type OnboardingFormProps = {
 const MOBILE_UPLOAD_TARGET_BYTES = 1_500_000;
 const MAX_UPLOAD_BYTES = 4_000_000;
 
-const QUICK_EMOJIS = ["🥊", "🔥", "⚡", "💥", "👑", "😎"];
-
 function StepBadge({ step, active }: { step: string; active: boolean }) {
   return (
     <div
@@ -66,10 +64,7 @@ function GenderCard({
       <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-current/15 bg-current/10 text-2xl">
         {icon}
       </span>
-      <span>
-        <span className="block text-[11px] uppercase tracking-[0.28em] opacity-60">Board</span>
-        <span className="mt-1 block text-lg font-semibold">{title}</span>
-      </span>
+      <span className="text-lg font-semibold">{title}</span>
     </button>
   );
 }
@@ -434,10 +429,10 @@ export function OnboardingForm({
                 Schritt 3
               </p>
               <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                Spitzname + Emoji
+                Spitzname
               </h1>
               <p className="mt-4 text-base leading-7 text-slate-300 sm:text-lg">
-                Gib deinen Spitznamen ein und tippe auf das passende Board.
+                Gib deinen Spitznamen ein und wähle dein Board aus.
               </p>
             </div>
 
@@ -462,29 +457,11 @@ export function OnboardingForm({
                   required
                   minLength={2}
                   maxLength={80}
-                  placeholder="z. B. Flexx 🥊"
+                  placeholder="z. B. Flexx"
                   autoFocus
                   value={nickname}
                   onChange={(event) => setNickname(event.target.value)}
                 />
-                <div className="flex flex-wrap gap-2">
-                  {QUICK_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-lg transition hover:bg-white/10"
-                      onClick={() =>
-                        setNickname((currentValue) =>
-                          currentValue.includes(emoji)
-                            ? currentValue
-                            : `${currentValue.trim()} ${emoji}`.trim()
-                        )
-                      }
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -492,14 +469,14 @@ export function OnboardingForm({
                   active={gender === "female"}
                   gender="female"
                   title="Frauen"
-                  icon="👑"
+                  icon="👩"
                   onClick={() => setGender("female")}
                 />
                 <GenderCard
                   active={gender === "male"}
                   gender="male"
                   title="Männer"
-                  icon="⚡"
+                  icon="👨"
                   onClick={() => setGender("male")}
                 />
               </div>
