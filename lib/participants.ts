@@ -230,6 +230,54 @@ export async function createParticipant(input: {
   return participant;
 }
 
+export async function updateParticipantSubmission(input: {
+  id: string;
+  name: string;
+  gender: Gender;
+  phone?: string;
+  score: number;
+  photoData?: Buffer;
+  photoContentType?: string;
+  photoFileName?: string;
+}) {
+  const sql = getSql();
+
+  const rows = input.photoData
+    ? await sql<ParticipantRow[]>`
+        update participants
+        set
+          name = ${input.name},
+          gender = ${input.gender},
+          phone = ${input.phone || null},
+          score = ${input.score},
+          approved = false,
+          photo_data = ${input.photoData},
+          photo_content_type = ${input.photoContentType || null},
+          photo_filename = ${input.photoFileName || null}
+        where id = ${input.id}
+        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
+      `
+    : await sql<ParticipantRow[]>`
+        update participants
+        set
+          name = ${input.name},
+          gender = ${input.gender},
+          phone = ${input.phone || null},
+          score = ${input.score},
+          approved = false
+        where id = ${input.id}
+        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
+      `;
+
+  const participant = rows[0];
+
+  if (!participant) {
+    throw new Error("Teilnehmer konnte nicht aktualisiert werden.");
+  }
+
+  return participant;
+}
+
 export async function approveParticipant(id: string) {
   const sql = getSql();
   await sql`
@@ -254,6 +302,22 @@ export async function deleteParticipant(id: string) {
     delete from participants
     where id = ${id}
   `;
+}
+
+export async function getParticipantsByIds(ids: string[]) {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const sql = getSql();
+  const rows = await sql<ParticipantRow[]>`
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, created_at
+    from participants
+    where id in ${sql(ids)}
+    order by created_at desc
+  `;
+
+  return rows;
 }
 
 export async function getParticipantById(id: string) {

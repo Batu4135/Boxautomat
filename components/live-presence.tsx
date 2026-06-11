@@ -4,9 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 
 type LivePresenceProps = {
   participantCount: number;
+  entryCount: number;
+  bestRank: number | null;
+  bestLabel: string | null;
 };
 
-export function LivePresence({ participantCount }: LivePresenceProps) {
+export function LivePresence({
+  participantCount,
+  entryCount,
+  bestRank,
+  bestLabel
+}: LivePresenceProps) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -42,6 +50,15 @@ export function LivePresence({ participantCount }: LivePresenceProps) {
         <div className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85">
           Teilnehmerzahl {participantCount}
         </div>
+        <div className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85">
+          Einträge {entryCount}
+        </div>
+        {bestRank ? (
+          <div className="rounded-full border border-[#ffd166]/20 bg-[#ffd166]/10 px-4 py-2 text-sm text-[#ffe4a4]">
+            Dein bester Platz #{bestRank}
+            {bestLabel ? ` · ${bestLabel}` : ""}
+          </div>
+        ) : null}
       </div>
     </section>
   );

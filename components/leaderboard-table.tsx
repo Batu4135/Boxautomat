@@ -4,7 +4,7 @@ type LeaderboardTableProps = {
   title: string;
   emptyText: string;
   participants: LeaderboardParticipant[];
-  highlightParticipantId?: string;
+  highlightParticipantIds?: string[];
 };
 
 function RewardIcon({ rank }: { rank: number }) {
@@ -43,8 +43,10 @@ export function LeaderboardTable({
   title,
   emptyText,
   participants,
-  highlightParticipantId
+  highlightParticipantIds = []
 }: LeaderboardTableProps) {
+  const highlightedIds = new Set(highlightParticipantIds);
+
   return (
     <section className="app-panel overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -64,7 +66,7 @@ export function LeaderboardTable({
       ) : (
         <div className="space-y-2.5">
           {participants.map((participant) => {
-            const highlighted = participant.id === highlightParticipantId;
+            const highlighted = highlightedIds.has(participant.id);
 
             return (
               <article
@@ -86,7 +88,7 @@ export function LeaderboardTable({
                     </p>
                     {highlighted ? (
                       <span className="rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-[#ffe4a4]">
-                        Du
+                        Von dir erstellt
                       </span>
                     ) : null}
                   </div>

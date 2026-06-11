@@ -3,11 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { clearAdminSession, requireAdmin, setAdminSession, setParticipantSession } from "@/lib/auth";
+import {
+  addOwnedParticipant,
+  clearAdminSession,
+  removeOwnedParticipant,
+  requireAdmin,
+  requireOwnedParticipant,
+  setAdminSession,
+  setParticipantSession
+} from "@/lib/auth";
 import {
   approveParticipant,
   createParticipant,
   deleteParticipant,
+  updateParticipantSubmission,
   updateParticipantScore
 } from "@/lib/participants";
 import type { Gender } from "@/lib/types";
@@ -51,6 +60,7 @@ export async function registerParticipantAction(formData: FormData) {
   const phone = safeText(formData.get("phone"));
   const scoreValue = safeText(formData.get("score"));
   const returnTo = safeReturnPath(formData.get("returnTo"));
+  const editParticipantId = safeText(formData.get("editParticipantId"));
   const parsedScore = Number(scoreValue);
   const photo = formData.get("photo");
 
@@ -60,30 +70,55 @@ export async function registerParticipantAction(formData: FormData) {
     !gender ||
     !Number.isFinite(parsedScore) ||
     parsedScore < 0 ||
-    !(photo instanceof File) ||
-    photo.size === 0 ||
-    photo.size > 4 * 1024 * 1024
+    (!(photo instanceof File) || photo.size === 0) && !editParticipantId
   ) {
     redirect(withQuery(returnTo, { submit: "1", status: "error" }));
   }
 
-  const contentType = photo.type || "image/jpeg";
-
-  if (!contentType.startsWith("image/")) {
+  if (photo instanceof File && photo.size > 4 * 1024 * 1024) {
     redirect(withQuery(returnTo, { submit: "1", status: "error" }));
   }
 
-  const participant = await createParticipant({
-    name,
-    gender,
-    phone,
-    score: Math.round(parsedScore),
-    photoData: Buffer.from(await photo.arrayBuffer()),
-    photoContentType: contentType,
-    photoFileName: safeText(photo.name) || `${name}-score.jpg`
-  });
+  const contentType = photo instanceof File ? photo.type || "image/jpeg" : null;
+
+  if (contentType && !contentType.startsWith("image/")) {
+    redirect(withQuery(returnTo, { submit: "1", status: "error" }));
+  }
+
+  const participant = editParticipantId
+    ? await (async () => {
+        await requireOwnedParticipant(editParticipantId);
+
+        return updateParticipantSubmission({
+          id: editParticipantId,
+          name,
+          gender,
+          phone,
+          score: Math.round(parsedScore),
+          photoData:
+            photo instanceof File && photo.size > 0
+              ? Buffer.from(await photo.arrayBuffer())
+              : undefined,
+          photoContentType: contentType ?? undefined,
+          photoFileName:
+            photo instanceof File && photo.size > 0
+              ? safeText(photo.name) || `${name}-score.jpg`
+              : undefined
+        });
+      })()
+    : await createParticipant({
+        name,
+        gender,
+        phone,
+        score: Math.round(parsedScore),
+        photoData: Buffer.from(await (photo as File).arrayBuffer()),
+        photoContentType: contentType || "image/jpeg",
+        photoFileName:
+          photo instanceof File ? safeText(photo.name) || `${name}-score.jpg` : `${name}-score.jpg`
+      });
 
   await setParticipantSession(participant.id);
+  await addOwnedParticipant(participant.id);
   revalidatePath("/");
   revalidatePath("/rangliste");
   redirect(returnTo);
@@ -150,4 +185,20 @@ export async function deleteParticipantAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/rangliste");
+}
+
+export async function deleteOwnedParticipantAction(formData: FormData) {
+  const id = safeText(formData.get("id"));
+  const returnTo = safeReturnPath(formData.get("returnTo"));
+
+  if (!id) {
+    throw new Error("Teilnehmer-ID fehlt.");
+  }
+
+  await requireOwnedParticipant(id);
+  await deleteParticipant(id);
+  await removeOwnedParticipant(id);
+  revalidatePath("/");
+  revalidatePath("/rangliste");
+  redirect(returnTo);
 }

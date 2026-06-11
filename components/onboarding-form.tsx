@@ -13,6 +13,9 @@ type OnboardingFormProps = {
   closeHref?: string;
   defaultName?: string;
   defaultGender?: Gender | "";
+  defaultScore?: number;
+  editParticipantId?: string;
+  hasExistingPhoto?: boolean;
   returnTo?: string;
 };
 
@@ -157,13 +160,16 @@ export function OnboardingForm({
   closeHref,
   defaultName = "",
   defaultGender = "",
+  defaultScore,
+  editParticipantId,
+  hasExistingPhoto = false,
   returnTo = "/"
 }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [nickname, setNickname] = useState(defaultName);
   const [gender, setGender] = useState<Gender | "">(defaultGender);
-  const [score, setScore] = useState("");
-  const [photoName, setPhotoName] = useState("");
+  const [score, setScore] = useState(defaultScore ? String(defaultScore) : "");
+  const [photoName, setPhotoName] = useState(hasExistingPhoto ? "Vorhandenes Bild" : "");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
@@ -188,9 +194,9 @@ export function OnboardingForm({
     };
   }, [photoPreviewUrl]);
 
-  const canContinueFromStepOne = !!selectedPhoto;
+  const canContinueFromStepOne = !!selectedPhoto || hasExistingPhoto;
   const canContinueFromStepTwo = score.trim() !== "" && Number(score) >= 0;
-  const canSubmit = nickname.trim().length >= 2 && !!gender && !!selectedPhoto;
+  const canSubmit = nickname.trim().length >= 2 && !!gender && (!!selectedPhoto || hasExistingPhoto);
 
   async function handleSubmit(formData: FormData) {
     setClientError(null);
@@ -199,21 +205,23 @@ export function OnboardingForm({
     try {
       const currentPhoto = selectedPhoto;
 
-      if (!currentPhoto || currentPhoto.size === 0) {
+      if (!currentPhoto && !editParticipantId) {
         setClientError("Bitte wähle ein Foto vom Score aus.");
         setIsPreparingUpload(false);
         return;
       }
 
-      if (!currentPhoto.type.startsWith("image/")) {
+      if (currentPhoto && !currentPhoto.type.startsWith("image/")) {
         setClientError("Bitte lade nur ein Bild hoch.");
         setIsPreparingUpload(false);
         return;
       }
 
-      const preparedPhoto = await compressPhotoForUpload(currentPhoto);
+      const preparedPhoto = currentPhoto
+        ? await compressPhotoForUpload(currentPhoto)
+        : null;
 
-      if (preparedPhoto.size > MAX_UPLOAD_BYTES) {
+      if (preparedPhoto && preparedPhoto.size > MAX_UPLOAD_BYTES) {
         setClientError(
           "Das Foto ist noch zu groß. Bitte gehe näher ans Display oder wähle ein kleineres Bild."
         );
@@ -221,7 +229,11 @@ export function OnboardingForm({
         return;
       }
 
-      formData.set("photo", preparedPhoto);
+      if (preparedPhoto) {
+        formData.set("photo", preparedPhoto);
+      } else {
+        formData.delete("photo");
+      }
     } catch {
       setClientError(
         "Das Foto konnte gerade nicht gesendet werden. Bitte versuche es noch einmal."
@@ -326,9 +338,9 @@ export function OnboardingForm({
                 <span className="mt-4 text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
                   Score-Foto
                 </span>
-                <span className="mt-3 font-display text-2xl text-white">
+                  <span className="mt-3 font-display text-2xl text-white">
                   {photoName ? "Bild ausgewählt" : "Kamera oder Mediathek"}
-                </span>
+                  </span>
                 <span className="mt-3 max-w-sm text-sm leading-6 text-slate-300">
                   {photoName ||
                     "Du kannst direkt fotografieren oder ein Bild aus deiner Foto-Mediathek auswählen."}
@@ -497,6 +509,7 @@ export function OnboardingForm({
               <input type="hidden" name="phone" value="" />
               <input type="hidden" name="score" value={score} />
               <input type="hidden" name="returnTo" value={returnTo} />
+              <input type="hidden" name="editParticipantId" value={editParticipantId ?? ""} />
 
               <div className="mt-4 flex flex-col gap-3">
                 <FormSubmitButton

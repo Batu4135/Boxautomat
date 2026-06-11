@@ -6,6 +6,7 @@ import { getAdminPassword } from "@/lib/env";
 
 const ADMIN_COOKIE = "boxautomat-admin";
 const PARTICIPANT_COOKIE = "boxautomat-participant";
+const OWNED_PARTICIPANTS_COOKIE = "boxautomat-owned";
 
 export async function isAdminAuthenticated() {
   const cookieStore = await cookies();
@@ -49,9 +50,70 @@ export async function setParticipantSession(participantId: string) {
   });
 }
 
+export async function addOwnedParticipant(participantId: string) {
+  const cookieStore = await cookies();
+  const existingValue = cookieStore.get(OWNED_PARTICIPANTS_COOKIE)?.value ?? "";
+  const nextIds = Array.from(
+    new Set(
+      existingValue
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .concat(participantId)
+    )
+  );
+
+  cookieStore.set(OWNED_PARTICIPANTS_COOKIE, nextIds.join(","), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30
+  });
+}
+
 export async function getParticipantSession() {
   const cookieStore = await cookies();
   return cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
+}
+
+export async function getOwnedParticipantIds() {
+  const cookieStore = await cookies();
+  const rawValue = cookieStore.get(OWNED_PARTICIPANTS_COOKIE)?.value ?? "";
+
+  return rawValue
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+export async function requireOwnedParticipant(participantId: string) {
+  const ownedIds = await getOwnedParticipantIds();
+
+  if (!ownedIds.includes(participantId)) {
+    throw new Error("Nicht autorisiert.");
+  }
+}
+
+export async function removeOwnedParticipant(participantId: string) {
+  const cookieStore = await cookies();
+  const ownedIds = (await getOwnedParticipantIds()).filter((id) => id !== participantId);
+
+  cookieStore.set(OWNED_PARTICIPANTS_COOKIE, ownedIds.join(","), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30
+  });
+
+  if ((await getParticipantSession()) === participantId) {
+    if (ownedIds[0]) {
+      await setParticipantSession(ownedIds[0]);
+    } else {
+      await clearParticipantSession();
+    }
+  }
 }
 
 export async function clearParticipantSession() {
