@@ -9,15 +9,15 @@ type LeaderboardTableProps = {
 
 function RewardIcon({ rank }: { rank: number }) {
   if (rank === 1) {
-    return <span className="text-2xl opacity-50">🏆</span>;
+    return <span className="text-3xl font-black leading-none text-[#ffd166]">1</span>;
   }
 
   if (rank === 2) {
-    return <span className="text-2xl opacity-60">🍽️🥤</span>;
+    return <span className="text-3xl font-black leading-none text-sky-300">2</span>;
   }
 
   if (rank === 3) {
-    return <span className="text-2xl opacity-60">🍰🥤</span>;
+    return <span className="text-3xl font-black leading-none text-emerald-300">3</span>;
   }
 
   return <span className="text-sm font-semibold text-white/45">{rank}.</span>;
@@ -29,7 +29,7 @@ function rowStyle(rank: number) {
   }
 
   if (rank === 2) {
-    return "border-cyan-300/25 bg-[linear-gradient(135deg,rgba(125,211,252,0.12),rgba(255,255,255,0.05))]";
+    return "border-sky-300/25 bg-[linear-gradient(135deg,rgba(125,211,252,0.12),rgba(255,255,255,0.05))]";
   }
 
   if (rank === 3) {
@@ -67,59 +67,63 @@ export function LeaderboardTable({
           {emptyText}
         </div>
       ) : (
-        <div className="space-y-3">
-          {participants.map((participant) => {
-            const highlighted = highlightedIds.has(participant.id);
-            const scoreWidth =
-              topScore > 0 && participant.score !== null
-                ? Math.max(10, Math.round((participant.score / topScore) * 100))
-                : 10;
+        <div className="max-h-[30rem] overflow-y-auto pr-1 [scrollbar-color:rgba(255,255,255,0.26)_transparent] [scrollbar-width:thin]">
+          <div className="space-y-3">
+            {participants.map((participant) => {
+              const highlighted = highlightedIds.has(participant.id);
+              const scoreWidth =
+                topScore > 0 && participant.score !== null
+                  ? Math.max(10, Math.round((participant.score / topScore) * 100))
+                  : 10;
 
-            return (
-              <article
-                key={participant.id}
-                className={`board-row relative overflow-hidden rounded-[1.55rem] border px-3 py-3.5 ${
-                  highlighted
-                    ? "border-[#ffd166]/35 bg-[linear-gradient(135deg,rgba(255,209,102,0.18),rgba(255,255,255,0.05))] shadow-[0_18px_40px_rgba(255,209,102,0.08)]"
-                    : rowStyle(participant.rank)
-                }`}
-              >
-                <div
-                  className="pointer-events-none absolute bottom-0 left-0 h-1.5 rounded-r-full bg-[linear-gradient(90deg,#f56442,#ffd166)] opacity-85"
-                  style={{ width: `${scoreWidth}%` }}
-                />
+              return (
+                <article
+                  key={participant.id}
+                  className={`board-row relative overflow-hidden rounded-[1.55rem] border px-3 py-3.5 ${
+                    highlighted
+                      ? "border-[#ffd166]/35 bg-[linear-gradient(135deg,rgba(255,209,102,0.18),rgba(255,255,255,0.05))] shadow-[0_18px_40px_rgba(255,209,102,0.08)]"
+                      : rowStyle(participant.rank)
+                  }`}
+                >
+                  <div
+                    className="pointer-events-none absolute bottom-0 left-0 h-1.5 rounded-r-full bg-[linear-gradient(90deg,#f56442,#ffd166)] opacity-85"
+                    style={{ width: `${scoreWidth}%` }}
+                  />
 
-                <div className="relative flex items-center gap-3">
-                  <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-[1rem] border border-white/10 bg-black/18">
-                    <RewardIcon rank={participant.rank} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-semibold text-white sm:text-base">
-                        {participant.name}
-                      </p>
-                      {highlighted ? (
-                        <span className="shrink-0 rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#ffe4a4]">
-                          Dein
-                        </span>
-                      ) : null}
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-[1rem] border border-white/10 bg-black/18">
+                      <RewardIcon rank={participant.rank} />
                     </div>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-white/42">
-                      Platz {participant.rank}
-                    </p>
-                  </div>
 
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-white/35">Punkte</p>
-                    <p className="mt-1 text-xl font-semibold text-white sm:text-2xl">
-                      {participant.score}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold text-white sm:text-base">
+                          {participant.name}
+                        </p>
+                        {highlighted ? (
+                          <span className="shrink-0 rounded-full border border-[#ffd166]/30 bg-[#ffd166]/12 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#ffe4a4]">
+                            Dein
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-white/42">
+                        Platz {participant.rank}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-white/35">
+                        Punkte
+                      </p>
+                      <p className="mt-1 text-xl font-semibold text-white sm:text-2xl">
+                        {participant.score}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </article>
-            );
-          })}
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
     </section>
