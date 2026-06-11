@@ -28,17 +28,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const participantStatus = participantSession
     ? await getParticipantStatus(participantSession)
     : null;
+  const needsOnboarding = !participantStatus;
   const leaderboard = await getLeaderboardParticipants();
   const liveEntries = leaderboard.all.slice(0, 8);
 
   return (
-    <section className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+    <>
+      {needsOnboarding ? (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-slate-950/78 backdrop-blur-md" />
+          <div className="relative mx-auto flex min-h-screen max-w-2xl items-center justify-center p-4 sm:p-6">
+            <OnboardingForm hasError={resolvedSearchParams?.status === "error"} />
+          </div>
+        </div>
+      ) : null}
+
+      <section className={`space-y-6 ${needsOnboarding ? "pointer-events-none select-none blur-[3px]" : ""}`}>
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
         <div className="space-y-6">
           {participantStatus ? (
             <ParticipantStatusCard participantStatus={participantStatus} />
           ) : (
-            <OnboardingForm hasError={resolvedSearchParams?.status === "error"} />
+            <section className="rounded-[2.5rem] border border-white/10 bg-white/8 p-6 shadow-[0_30px_80px_rgba(2,6,23,0.45)] backdrop-blur sm:p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.4em] text-orange-200/80">
+                Scan erkannt
+              </p>
+              <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
+                Dein Onboarding ist gerade geoeffnet
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-orange-50/85 sm:text-lg">
+                Beim ersten Besuch erscheint ein Pflichtfenster fuer Name, Punktzahl und
+                Foto. Erst danach wechselt die App in die normale Ranglistenansicht.
+              </p>
+            </section>
           )}
 
           <section className="rounded-[2rem] border border-white/10 bg-black/20 p-6 backdrop-blur">
@@ -139,6 +161,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           emptyText="Noch keine freigegebenen Scores in der Maenner-Rangliste."
         />
       </div>
-    </section>
+      </section>
+    </>
   );
 }
