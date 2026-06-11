@@ -40,10 +40,10 @@ export default function RootLayout({
                 </span>
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.35em] text-white/45">
-                    Selimiye Bremen
+                    Selimiye Moschee Sommerfest
                   </p>
                   <p className="font-display text-lg text-white sm:text-xl">
-                    Boxautomat Challenge
+                    Box-Automat Challenge
                   </p>
                 </div>
               </Link>

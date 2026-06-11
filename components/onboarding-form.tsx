@@ -198,7 +198,7 @@ export function OnboardingForm({
               href={closeHref}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/8 text-lg text-white/80 transition hover:bg-white/12"
             >
-              ×
+              x
             </Link>
           ) : null}
         </div>
@@ -232,7 +232,7 @@ export function OnboardingForm({
                   Lade dein Bild hoch
                 </h1>
                 <p className="mt-4 text-base leading-7 text-orange-50/85 sm:text-lg">
-                  Fotografiere direkt den Score auf dem Automaten oder waehle das Bild aus deiner Galerie.
+                  Fotografiere direkt den Score auf dem Automaten oder waehle ein Bild aus deiner Foto-Mediathek.
                 </p>
               </div>
 
@@ -242,7 +242,6 @@ export function OnboardingForm({
                   name="photo"
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   required
                   className="sr-only"
                   onChange={(event) =>
@@ -257,10 +256,11 @@ export function OnboardingForm({
                     Score Foto
                   </span>
                   <span className="mt-3 font-display text-2xl text-white">
-                    {photoName ? "Bild ausgewaehlt" : "Kamera oeffnen oder Bild waehlen"}
+                    {photoName ? "Bild ausgewaehlt" : "Kamera oder Mediathek"}
                   </span>
                   <span className="mt-3 text-sm leading-6 text-orange-50/80">
-                    {photoName || "Handyfotos werden automatisch fuer den Upload verkleinert."}
+                    {photoName ||
+                      "Du kannst direkt fotografieren oder ein Bild aus deiner Foto-Mediathek auswaehlen."}
                   </span>
                 </label>
               </div>
@@ -301,7 +301,7 @@ export function OnboardingForm({
             </div>
           ) : null}
 
-          {currentStep === 4 ? (
+          {currentStep === 3 ? (
             <div className="space-y-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200/80">
