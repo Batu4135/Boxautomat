@@ -24,6 +24,13 @@ export function LivePresence({ participantCount }: LivePresenceProps) {
     return Math.min(24, Math.max(18, nudged));
   }, [now, participantCount]);
 
+  const displayedParticipantCount = useMemo(() => {
+    const span = 6;
+    const wave = Math.round(((Math.cos(now / 10000) + 1) / 2) * span);
+    const nudged = 18 + wave + (participantCount % 3 === 0 ? 0 : 1);
+    return Math.min(24, Math.max(18, nudged));
+  }, [now, participantCount]);
+
   return (
     <section className="app-panel flex flex-col items-center gap-4 px-4 py-5 text-center sm:px-6">
       <div>
@@ -41,7 +48,7 @@ export function LivePresence({ participantCount }: LivePresenceProps) {
           Aktuell online {onlineCount}
         </div>
         <div className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85">
-          Teilnehmerzahl {participantCount}
+          Teilnehmerzahl {displayedParticipantCount}
         </div>
       </div>
     </section>
