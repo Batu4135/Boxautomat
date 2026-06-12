@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getSql } from "@/lib/db";
+import { ensureAccountSchema } from "@/lib/accounts";
 import type {
   Gender,
   LeaderboardParticipant,
@@ -18,6 +19,7 @@ async function ensureParticipantSchema() {
     const sql = getSql();
 
     globalForParticipants.participantSchemaReady = (async () => {
+      await ensureAccountSchema();
       await sql`alter table participants add column if not exists owner_token text`;
       await sql`alter table participants add column if not exists recovery_code text`;
       await sql`create index if not exists participants_owner_token_idx on participants(owner_token)`;
@@ -114,6 +116,7 @@ function buildProjectedLeaderboard(
     score: entry.score,
     photo_content_type: entry.photo_content_type,
     photo_filename: entry.photo_filename,
+    account_id: entry.account_id ?? null,
     owner_token: entry.owner_token ?? null,
     recovery_code: entry.recovery_code ?? null,
     created_at: entry.created_at
@@ -165,7 +168,7 @@ async function queryParticipants(whereClause?: Gender) {
 
   if (whereClause) {
     return sql<ParticipantRow[]>`
-      select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+      select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
       from participants
       where gender = ${whereClause}
       order by approved asc, created_at desc
@@ -173,7 +176,7 @@ async function queryParticipants(whereClause?: Gender) {
   }
 
   return sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     order by approved asc, created_at desc
   `;
@@ -183,7 +186,7 @@ export async function getLeaderboardParticipants() {
   await ensureParticipantSchema();
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     where approved = true and score is not null
     order by score desc, created_at asc
@@ -237,6 +240,7 @@ export async function createParticipant(input: {
   photoData: Buffer;
   photoContentType: string;
   photoFileName: string;
+  accountId?: string;
   ownerToken?: string;
   recoveryCode?: string;
 }) {
@@ -251,6 +255,7 @@ export async function createParticipant(input: {
       photo_data,
       photo_content_type,
       photo_filename,
+      account_id,
       owner_token,
       recovery_code
     )
@@ -262,10 +267,11 @@ export async function createParticipant(input: {
       ${input.photoData},
       ${input.photoContentType},
       ${input.photoFileName},
+      ${input.accountId || null},
       ${input.ownerToken || null},
       ${input.recoveryCode ? normalizeRecoveryCode(input.recoveryCode) : null}
     )
-    returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
   `;
 
   const participant = rows[0];
@@ -286,6 +292,7 @@ export async function updateParticipantSubmission(input: {
   photoData?: Buffer;
   photoContentType?: string;
   photoFileName?: string;
+  accountId?: string;
   ownerToken?: string;
   recoveryCode?: string;
 }) {
@@ -304,10 +311,11 @@ export async function updateParticipantSubmission(input: {
           photo_data = ${input.photoData},
           photo_content_type = ${input.photoContentType || null},
           photo_filename = ${input.photoFileName || null},
+          account_id = coalesce(${input.accountId || null}, account_id),
           owner_token = coalesce(${input.ownerToken || null}, owner_token),
           recovery_code = coalesce(${input.recoveryCode ? normalizeRecoveryCode(input.recoveryCode) : null}, recovery_code)
         where id = ${input.id}
-        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
       `
     : await sql<ParticipantRow[]>`
         update participants
@@ -317,10 +325,11 @@ export async function updateParticipantSubmission(input: {
           phone = ${input.phone || null},
           score = ${input.score},
           approved = false,
+          account_id = coalesce(${input.accountId || null}, account_id),
           owner_token = coalesce(${input.ownerToken || null}, owner_token),
           recovery_code = coalesce(${input.recoveryCode ? normalizeRecoveryCode(input.recoveryCode) : null}, recovery_code)
         where id = ${input.id}
-        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+        returning id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
       `;
 
   const participant = rows[0];
@@ -369,9 +378,26 @@ export async function getParticipantsByIds(ids: string[]) {
   await ensureParticipantSchema();
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     where id in ${sql(ids)}
+    order by created_at desc
+  `;
+
+  return rows;
+}
+
+export async function getParticipantsByAccountId(accountId: string) {
+  if (!accountId.trim()) {
+    return [];
+  }
+
+  await ensureParticipantSchema();
+  const sql = getSql();
+  const rows = await sql<ParticipantRow[]>`
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
+    from participants
+    where account_id = ${accountId.trim()}
     order by created_at desc
   `;
 
@@ -386,7 +412,7 @@ export async function getParticipantsByOwnerToken(ownerToken: string) {
   await ensureParticipantSchema();
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     where owner_token = ${ownerToken.trim()}
     order by created_at desc
@@ -416,6 +442,21 @@ export async function assignOwnershipToParticipants(
   `;
 }
 
+export async function assignAccountToParticipants(participantIds: string[], accountId: string) {
+  if (participantIds.length === 0 || !accountId.trim()) {
+    return;
+  }
+
+  await ensureParticipantSchema();
+  const sql = getSql();
+
+  await sql`
+    update participants
+    set account_id = ${accountId.trim()}
+    where id in ${sql(participantIds)}
+  `;
+}
+
 export async function getParticipantsByRecoveryCode(recoveryCode: string) {
   const normalizedCode = normalizeRecoveryCode(recoveryCode);
 
@@ -426,7 +467,7 @@ export async function getParticipantsByRecoveryCode(recoveryCode: string) {
   await ensureParticipantSchema();
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     where recovery_code = ${normalizedCode}
     order by created_at desc
@@ -439,7 +480,7 @@ export async function getParticipantById(id: string) {
   await ensureParticipantSchema();
   const sql = getSql();
   const rows = await sql<ParticipantRow[]>`
-    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, owner_token, recovery_code, created_at
+    select id, name, gender, phone, approved, score, photo_content_type, photo_filename, account_id, owner_token, recovery_code, created_at
     from participants
     where id = ${id}
     limit 1

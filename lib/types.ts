@@ -1,5 +1,12 @@
 export type Gender = "female" | "male";
 
+export type AccountRow = {
+  id: string;
+  username: string;
+  password_hash: string;
+  created_at: string;
+};
+
 export type ParticipantRow = {
   id: string;
   name: string;
@@ -9,6 +16,7 @@ export type ParticipantRow = {
   score: number | null;
   photo_content_type: string | null;
   photo_filename: string | null;
+  account_id?: string | null;
   owner_token?: string | null;
   recovery_code?: string | null;
   created_at: string;

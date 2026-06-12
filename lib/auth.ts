@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { getAdminPassword } from "@/lib/env";
 
 const ADMIN_COOKIE = "boxautomat-admin";
+const USER_COOKIE = "boxautomat-user";
 const PARTICIPANT_COOKIE = "boxautomat-participant";
 const OWNED_PARTICIPANTS_COOKIE = "boxautomat-owned";
 
@@ -48,6 +49,38 @@ export async function setAdminSession() {
 export async function clearAdminSession() {
   const cookieStore = await cookies();
   cookieStore.delete(ADMIN_COOKIE);
+}
+
+export async function setUserSession(accountId: string) {
+  const cookieStore = await cookies();
+
+  cookieStore.set(USER_COOKIE, accountId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30
+  });
+}
+
+export async function getUserSession() {
+  const cookieStore = await cookies();
+  return cookieStore.get(USER_COOKIE)?.value ?? null;
+}
+
+export async function requireUserSession() {
+  const accountId = await getUserSession();
+
+  if (!accountId) {
+    throw new Error("Nicht eingeloggt.");
+  }
+
+  return accountId;
+}
+
+export async function clearUserSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(USER_COOKIE);
 }
 
 export async function setParticipantSession(participantId: string) {
