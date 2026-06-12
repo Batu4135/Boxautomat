@@ -48,7 +48,7 @@ export function EventCountdown() {
 
     return {
       label: "Wertung geschlossen",
-      detail: "Top 3 stehen fest",
+      detail: "Auswertung läuft",
       remaining: 0
     };
   }, [now]);

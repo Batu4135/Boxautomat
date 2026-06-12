@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { OwnedDeleteForm } from "@/components/owned-delete-form";
@@ -30,15 +28,6 @@ function RewardIcon({ rank }: { rank: number }) {
   return <span className="text-sm font-semibold text-white/45">{rank}.</span>;
 }
 
-function PencilIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9">
-      <path d="M4 20h4l10-10-4-4L4 16z" />
-      <path d="M13 7l4 4" />
-    </svg>
-  );
-}
-
 function TrashIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9">
@@ -56,17 +45,6 @@ function ArrowUpIcon() {
       <path d="M6 11l6-6 6 6" />
     </svg>
   );
-}
-
-function withQuery(path: string, query: Record<string, string>) {
-  const url = new URL(path, "https://boxautomat.local");
-
-  for (const [key, value] of Object.entries(query)) {
-    url.searchParams.set(key, value);
-  }
-
-  const search = url.searchParams.toString();
-  return `${url.pathname}${search ? `?${search}` : ""}`;
 }
 
 function rowStyle(rank: number) {
@@ -190,13 +168,6 @@ export function LeaderboardTable({
 
                       {highlighted ? (
                         <div className="flex shrink-0 gap-2">
-                          <Link
-                            href={withQuery(returnTo, { submit: "1", edit: participant.id })}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/80 transition hover:bg-white/12"
-                            aria-label="Eintrag bearbeiten"
-                          >
-                            <PencilIcon />
-                          </Link>
                           <OwnedDeleteForm id={participant.id} returnTo={returnTo}>
                             <TrashIcon />
                           </OwnedDeleteForm>

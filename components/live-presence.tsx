@@ -18,10 +18,10 @@ export function LivePresence({ participantCount }: LivePresenceProps) {
   }, []);
 
   const onlineCount = useMemo(() => {
-    const span = 7;
+    const span = 5;
     const wave = Math.round(((Math.sin(now / 9000) + 1) / 2) * span);
-    const nudged = 18 + wave + (participantCount % 2);
-    return Math.min(24, Math.max(18, nudged));
+    const nudged = 3 + wave + (participantCount % 2 === 0 ? 0 : 1);
+    return Math.min(8, Math.max(3, nudged));
   }, [now, participantCount]);
 
   const displayedParticipantCount = useMemo(() => {

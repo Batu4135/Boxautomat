@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Manrope, Sora } from "next/font/google";
 
 import { EventCountdown } from "@/components/event-countdown";
@@ -40,7 +41,9 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
 
             <footer className="pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-6 text-center text-xs tracking-[0.16em] text-white/38">
-              Made with <span className="text-[#ff7a90]">♥</span> by Flexx
+              <Link href="/admin" className="transition hover:text-white/55">
+                Made with <span className="text-[#ff7a90]">♥</span> by Flexx
+              </Link>
             </footer>
           </div>
         </div>
