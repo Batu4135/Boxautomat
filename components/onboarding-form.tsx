@@ -321,6 +321,13 @@ export function OnboardingForm({
       ) : null}
 
       <form action={handleSubmit} className="relative z-10 mt-4 flex flex-1 flex-col">
+        <input type="hidden" name="name" value={nickname} />
+        <input type="hidden" name="gender" value={gender} />
+        <input type="hidden" name="phone" value="" />
+        <input type="hidden" name="score" value={score} />
+        <input type="hidden" name="returnTo" value={returnTo} />
+        <input type="hidden" name="editParticipantId" value={editParticipantId ?? ""} />
+
         {currentStep === 1 ? (
           <div className="space-y-6 py-4">
             <div>
@@ -509,13 +516,6 @@ export function OnboardingForm({
                   onClick={() => setGender("male")}
                 />
               </div>
-
-              <input type="hidden" name="name" value={nickname} />
-              <input type="hidden" name="gender" value={gender} />
-              <input type="hidden" name="phone" value="" />
-              <input type="hidden" name="score" value={score} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <input type="hidden" name="editParticipantId" value={editParticipantId ?? ""} />
 
               <div className="mt-4 flex flex-col gap-3">
                 <button
