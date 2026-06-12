@@ -26,9 +26,10 @@ export function LivePresence({
   }, []);
 
   const onlineCount = useMemo(() => {
-    const base = Math.max(8, participantCount + 6);
-    const pulse = Math.abs(Math.floor(Math.sin(now / 9000) * 3));
-    return base + pulse;
+    const span = 7;
+    const wave = Math.round(((Math.sin(now / 9000) + 1) / 2) * span);
+    const nudged = 18 + wave + (participantCount % 2);
+    return Math.min(24, Math.max(18, nudged));
   }, [now, participantCount]);
 
   return (
