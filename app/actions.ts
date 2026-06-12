@@ -87,41 +87,50 @@ export async function registerParticipantAction(formData: FormData) {
     redirect(withQuery(returnTo, { submit: "1", status: "error" }));
   }
 
-  const participant = editParticipantId
-    ? await (async () => {
-        await requireOwnedParticipant(editParticipantId);
+  let participant;
 
-        return updateParticipantSubmission({
-          id: editParticipantId,
+  try {
+    participant = editParticipantId
+      ? await (async () => {
+          await requireOwnedParticipant(editParticipantId);
+
+          return updateParticipantSubmission({
+            id: editParticipantId,
+            name,
+            gender,
+            phone,
+            score: Math.round(parsedScore),
+            photoData:
+              photo instanceof File && photo.size > 0
+                ? Buffer.from(await photo.arrayBuffer())
+                : undefined,
+            photoContentType: contentType ?? undefined,
+            photoFileName:
+              photo instanceof File && photo.size > 0
+                ? safeText(photo.name) || `${name}-score.jpg`
+                : undefined,
+            ownerToken,
+            recoveryCode
+          });
+        })()
+      : await createParticipant({
           name,
           gender,
           phone,
           score: Math.round(parsedScore),
-          photoData:
-            photo instanceof File && photo.size > 0
-              ? Buffer.from(await photo.arrayBuffer())
-              : undefined,
-          photoContentType: contentType ?? undefined,
+          photoData: Buffer.from(await (photo as File).arrayBuffer()),
+          photoContentType: contentType || "image/jpeg",
           photoFileName:
-            photo instanceof File && photo.size > 0
+            photo instanceof File
               ? safeText(photo.name) || `${name}-score.jpg`
-              : undefined,
+              : `${name}-score.jpg`,
           ownerToken,
           recoveryCode
         });
-      })()
-    : await createParticipant({
-        name,
-        gender,
-        phone,
-        score: Math.round(parsedScore),
-        photoData: Buffer.from(await (photo as File).arrayBuffer()),
-        photoContentType: contentType || "image/jpeg",
-        photoFileName:
-          photo instanceof File ? safeText(photo.name) || `${name}-score.jpg` : `${name}-score.jpg`,
-        ownerToken,
-        recoveryCode
-      });
+  } catch (error) {
+    console.error("registerParticipantAction failed", error);
+    redirect(withQuery(returnTo, { submit: "1", status: "error" }));
+  }
 
   await setParticipantSession(participant.id);
   await addOwnedParticipant(participant.id);

@@ -228,6 +228,7 @@ export async function createParticipant(input: {
       name,
       gender,
       phone,
+      approved,
       score,
       photo_data,
       photo_content_type,
