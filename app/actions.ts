@@ -3,24 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { authenticateAccount, createAccount } from "@/lib/accounts";
 import {
+  addOwnedParticipant,
   clearAdminSession,
-  clearUserSession,
-  getOwnedParticipantIds,
+  removeOwnedParticipant,
   requireAdmin,
-  requireUserSession,
+  requireOwnedParticipant,
   setAdminSession,
-  setOwnedParticipants,
-  setParticipantSession,
-  setUserSession
+  setParticipantSession
 } from "@/lib/auth";
 import {
   approveParticipant,
-  assignAccountToParticipants,
   createParticipant,
   deleteParticipant,
-  getParticipantById,
   updateParticipantSubmission,
   updateParticipantScore
 } from "@/lib/participants";
@@ -59,81 +54,7 @@ function withQuery(path: string, query: Record<string, string>) {
   return `${url.pathname}${search ? `?${search}` : ""}`;
 }
 
-async function attachLegacyOwnedEntriesToAccount(accountId: string) {
-  const legacyOwnedIds = await getOwnedParticipantIds();
-
-  if (legacyOwnedIds.length === 0) {
-    return;
-  }
-
-  await assignAccountToParticipants(legacyOwnedIds, accountId);
-  await setOwnedParticipants([]);
-}
-
-async function requireParticipantAccountOwnership(participantId: string) {
-  const accountId = await requireUserSession();
-  const participant = await getParticipantById(participantId);
-
-  if (!participant || participant.account_id !== accountId) {
-    throw new Error("Nicht autorisiert.");
-  }
-
-  return { accountId, participant };
-}
-
-export async function registerAccountAction(formData: FormData) {
-  const username = safeText(formData.get("username"));
-  const password = safeText(formData.get("password"));
-  const returnTo = safeReturnPath(formData.get("returnTo"));
-
-  if (username.length < 3 || username.length > 32 || password.length < 6 || password.length > 120) {
-    redirect(withQuery(returnTo, { auth: "1", authError: "register" }));
-  }
-
-  try {
-    const account = await createAccount({ username, password });
-
-    if (!account) {
-      redirect(withQuery(returnTo, { auth: "1", authError: "register" }));
-    }
-
-    await setUserSession(account.id);
-    await attachLegacyOwnedEntriesToAccount(account.id);
-    revalidatePath("/");
-    revalidatePath("/rangliste");
-    redirect(returnTo);
-  } catch {
-    redirect(withQuery(returnTo, { auth: "1", authError: "register" }));
-  }
-}
-
-export async function loginAccountAction(formData: FormData) {
-  const username = safeText(formData.get("username"));
-  const password = safeText(formData.get("password"));
-  const returnTo = safeReturnPath(formData.get("returnTo"));
-
-  const account = await authenticateAccount({ username, password });
-
-  if (!account) {
-    redirect(withQuery(returnTo, { auth: "1", authError: "login" }));
-  }
-
-  await setUserSession(account.id);
-  await attachLegacyOwnedEntriesToAccount(account.id);
-  revalidatePath("/");
-  revalidatePath("/rangliste");
-  redirect(returnTo);
-}
-
-export async function logoutAccountAction(formData: FormData) {
-  const returnTo = safeReturnPath(formData.get("returnTo"));
-
-  await clearUserSession();
-  redirect(returnTo);
-}
-
 export async function registerParticipantAction(formData: FormData) {
-  const accountId = await requireUserSession();
   const name = safeText(formData.get("name"));
   const gender = parseGender(formData.get("gender"));
   const phone = safeText(formData.get("phone"));
@@ -168,7 +89,7 @@ export async function registerParticipantAction(formData: FormData) {
 
   const participant = editParticipantId
     ? await (async () => {
-        await requireParticipantAccountOwnership(editParticipantId);
+        await requireOwnedParticipant(editParticipantId);
 
         return updateParticipantSubmission({
           id: editParticipantId,
@@ -185,7 +106,6 @@ export async function registerParticipantAction(formData: FormData) {
             photo instanceof File && photo.size > 0
               ? safeText(photo.name) || `${name}-score.jpg`
               : undefined,
-          accountId,
           ownerToken,
           recoveryCode
         });
@@ -199,12 +119,12 @@ export async function registerParticipantAction(formData: FormData) {
         photoContentType: contentType || "image/jpeg",
         photoFileName:
           photo instanceof File ? safeText(photo.name) || `${name}-score.jpg` : `${name}-score.jpg`,
-        accountId,
         ownerToken,
         recoveryCode
       });
 
   await setParticipantSession(participant.id);
+  await addOwnedParticipant(participant.id);
   revalidatePath("/");
   revalidatePath("/rangliste");
   redirect(returnTo);
@@ -281,8 +201,9 @@ export async function deleteOwnedParticipantAction(formData: FormData) {
     throw new Error("Teilnehmer-ID fehlt.");
   }
 
-  await requireParticipantAccountOwnership(id);
+  await requireOwnedParticipant(id);
   await deleteParticipant(id);
+  await removeOwnedParticipant(id);
   revalidatePath("/");
   revalidatePath("/rangliste");
   redirect(returnTo);

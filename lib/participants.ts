@@ -55,30 +55,7 @@ function toTrend(rank: number, total: number): TrendDirection {
 }
 
 function buildLeaderboard(rows: ParticipantRow[]) {
-  const highestByPerson = new Map<string, ParticipantRow>();
-
-  for (const row of rows) {
-    const key = normalizeParticipantKey(row.name, row.gender);
-    const existing = highestByPerson.get(key);
-
-    if (!existing) {
-      highestByPerson.set(key, row);
-      continue;
-    }
-
-    const currentScore = row.score ?? 0;
-    const existingScore = existing.score ?? 0;
-
-    if (
-      currentScore > existingScore ||
-      (currentScore === existingScore &&
-        new Date(row.created_at).getTime() < new Date(existing.created_at).getTime())
-    ) {
-      highestByPerson.set(key, row);
-    }
-  }
-
-  const deduplicatedRows = Array.from(highestByPerson.values()).sort((left, right) => {
+  const sortedRows = [...rows].sort((left, right) => {
     const scoreDelta = (right.score ?? 0) - (left.score ?? 0);
 
     if (scoreDelta !== 0) {
@@ -88,7 +65,7 @@ function buildLeaderboard(rows: ParticipantRow[]) {
     return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
   });
 
-  return deduplicatedRows.map((participant, index, list): LeaderboardParticipant => {
+  return sortedRows.map((participant, index, list): LeaderboardParticipant => {
     const nextParticipant = list[index + 1];
 
     return {
@@ -263,6 +240,7 @@ export async function createParticipant(input: {
       ${input.name},
       ${input.gender},
       ${input.phone || null},
+      ${true},
       ${input.score},
       ${input.photoData},
       ${input.photoContentType},
@@ -307,7 +285,7 @@ export async function updateParticipantSubmission(input: {
           gender = ${input.gender},
           phone = ${input.phone || null},
           score = ${input.score},
-          approved = false,
+          approved = true,
           photo_data = ${input.photoData},
           photo_content_type = ${input.photoContentType || null},
           photo_filename = ${input.photoFileName || null},
@@ -324,7 +302,7 @@ export async function updateParticipantSubmission(input: {
           gender = ${input.gender},
           phone = ${input.phone || null},
           score = ${input.score},
-          approved = false,
+          approved = true,
           account_id = coalesce(${input.accountId || null}, account_id),
           owner_token = coalesce(${input.ownerToken || null}, owner_token),
           recovery_code = coalesce(${input.recoveryCode ? normalizeRecoveryCode(input.recoveryCode) : null}, recovery_code)

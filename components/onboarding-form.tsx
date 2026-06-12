@@ -2,7 +2,7 @@
 
 import NextImage from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { registerParticipantAction } from "@/app/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
@@ -22,6 +22,7 @@ type OnboardingFormProps = {
 
 const MOBILE_UPLOAD_TARGET_BYTES = 1_500_000;
 const MAX_UPLOAD_BYTES = 4_000_000;
+const REVIEW_DURATION_MS = 5_000;
 
 function StepBadge({ step, active }: { step: string; active: boolean }) {
   return (
@@ -170,7 +171,8 @@ export function OnboardingForm({
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
-  const totalSteps = 3;
+  const [reviewKey, setReviewKey] = useState(0);
+  const [reviewRemainingMs, setReviewRemainingMs] = useState(REVIEW_DURATION_MS);
 
   useEffect(() => {
     document.body.classList.add("onboarding-open");
@@ -190,9 +192,37 @@ export function OnboardingForm({
     };
   }, [photoPreviewUrl]);
 
+  useEffect(() => {
+    if (currentStep !== 4) {
+      return;
+    }
+
+    const startedAt = Date.now();
+
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, REVIEW_DURATION_MS - elapsed);
+      setReviewRemainingMs(remaining);
+
+      if (remaining === 0) {
+        window.clearInterval(interval);
+      }
+    }, 50);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [currentStep, reviewKey]);
+
   const canContinueFromStepOne = !!selectedPhoto || hasExistingPhoto;
   const canContinueFromStepTwo = score.trim() !== "" && Number(score) >= 0;
-  const canSubmit = nickname.trim().length >= 2 && !!gender && (!!selectedPhoto || hasExistingPhoto);
+  const canContinueFromStepThree = nickname.trim().length >= 2 && !!gender;
+  const canFinalize = canContinueFromStepThree && (!!selectedPhoto || hasExistingPhoto);
+  const reviewReady = reviewRemainingMs <= 0;
+  const previewProgress = useMemo(
+    () => Math.max(0, Math.min(100, (reviewRemainingMs / REVIEW_DURATION_MS) * 100)),
+    [reviewRemainingMs]
+  );
 
   async function handleSubmit(formData: FormData) {
     setClientError(null);
@@ -214,9 +244,7 @@ export function OnboardingForm({
         return;
       }
 
-      const preparedPhoto = currentPhoto
-        ? await compressPhotoForUpload(currentPhoto)
-        : null;
+      const preparedPhoto = currentPhoto ? await compressPhotoForUpload(currentPhoto) : null;
 
       if (preparedPhoto && preparedPhoto.size > MAX_UPLOAD_BYTES) {
         setClientError(
@@ -235,9 +263,7 @@ export function OnboardingForm({
       formData.set("ownerToken", identity.ownerToken);
       formData.set("recoveryCode", identity.recoveryCode);
     } catch {
-      setClientError(
-        "Das Foto konnte gerade nicht gesendet werden. Bitte versuche es noch einmal."
-      );
+      setClientError("Das Foto konnte gerade nicht gesendet werden. Bitte versuche es noch einmal.");
       setIsPreparingUpload(false);
       return;
     }
@@ -264,7 +290,7 @@ export function OnboardingForm({
 
         <div className="flex items-center gap-2">
           <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/80">
-            {currentStep}/{totalSteps}
+            {currentStep}/4
           </div>
           {closeHref ? (
             <Link
@@ -280,12 +306,13 @@ export function OnboardingForm({
       <div className="relative z-10 mt-5 flex flex-wrap gap-2">
         <StepBadge step="Foto" active={currentStep === 1} />
         <StepBadge step="Punkte" active={currentStep === 2} />
-        <StepBadge step="Spitzname" active={currentStep === 3} />
+        <StepBadge step="Name" active={currentStep === 3} />
+        <StepBadge step="Vorschau" active={currentStep === 4} />
       </div>
 
       {hasError ? (
         <div className="status-card status-error relative z-10 mt-4">
-          Bitte prüfe Spitzname, Board, Punktzahl und das Foto. Große Handyfotos werden automatisch verkleinert.
+          Bitte prüfe Name, Board, Punktzahl und das Foto. Große Handyfotos werden automatisch verkleinert.
         </div>
       ) : null}
 
@@ -297,9 +324,7 @@ export function OnboardingForm({
         {currentStep === 1 ? (
           <div className="space-y-6 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
-                Schritt 1
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Schritt 1</p>
               <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                 Bild hochladen
               </h1>
@@ -338,9 +363,9 @@ export function OnboardingForm({
                 <span className="mt-4 text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
                   Score-Foto
                 </span>
-                  <span className="mt-3 font-display text-2xl text-white">
+                <span className="mt-3 font-display text-2xl text-white">
                   {photoName ? "Bild ausgewählt" : "Kamera oder Mediathek"}
-                  </span>
+                </span>
                 <span className="mt-3 max-w-sm text-sm leading-6 text-slate-300">
                   {photoName ||
                     "Du kannst direkt fotografieren oder ein Bild aus deiner Foto-Mediathek auswählen."}
@@ -377,9 +402,7 @@ export function OnboardingForm({
         {currentStep === 2 ? (
           <div className="space-y-6 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
-                Schritt 2
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Schritt 2</p>
               <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
                 Deine Punktzahl
               </h1>
@@ -430,14 +453,12 @@ export function OnboardingForm({
         {currentStep === 3 ? (
           <div className="space-y-6 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">
-                Schritt 3
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Schritt 3</p>
               <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
-                Spitzname
+                Name und Board
               </h1>
               <p className="mt-4 text-base leading-7 text-slate-300 sm:text-lg">
-                Gib deinen Spitznamen ein und wähle dein Board aus.
+                Gib deinen Namen ein und wähle dein Board aus.
               </p>
             </div>
 
@@ -456,7 +477,7 @@ export function OnboardingForm({
 
               <div className="space-y-3">
                 <label htmlFor="nickname" className="text-sm font-medium text-white/85">
-                  Spitzname
+                  Name
                 </label>
                 <input
                   id="nickname"
@@ -465,7 +486,7 @@ export function OnboardingForm({
                   required
                   minLength={2}
                   maxLength={80}
-                  placeholder="Spitzname eingeben"
+                  placeholder="Name eingeben"
                   autoFocus
                   value={nickname}
                   onChange={(event) => setNickname(event.target.value)}
@@ -476,7 +497,7 @@ export function OnboardingForm({
                 <GenderCard
                   active={gender === "female"}
                   gender="female"
-                  title="Frauen"
+                  title="Damen"
                   icon="👩"
                   onClick={() => setGender("female")}
                 />
@@ -497,21 +518,104 @@ export function OnboardingForm({
               <input type="hidden" name="editParticipantId" value={editParticipantId ?? ""} />
 
               <div className="mt-4 flex flex-col gap-3">
+                <button
+                  type="button"
+                  disabled={!canFinalize}
+                  className="cta-button cta-primary w-full disabled:opacity-60"
+                  onClick={() => {
+                    setReviewRemainingMs(REVIEW_DURATION_MS);
+                    setReviewKey((value) => value + 1);
+                    setCurrentStep(4);
+                  }}
+                >
+                  Speichern
+                </button>
+                <button
+                  type="button"
+                  className="cta-button cta-secondary w-full"
+                  onClick={() => setCurrentStep(2)}
+                >
+                  Zurück
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {currentStep === 4 ? (
+          <div className="space-y-6 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">Vorschau</p>
+              <h1 className="mt-3 font-display text-4xl leading-tight text-white sm:text-5xl">
+                Prüfe deinen Eintrag
+              </h1>
+              <p className="mt-4 text-base leading-7 text-slate-300 sm:text-lg">
+                Schau kurz alles an. Nach 5 Sekunden kannst du den Eintrag endgültig speichern.
+              </p>
+            </div>
+
+            <div className="rounded-[1.9rem] border border-white/10 bg-white/[0.07] p-4">
+              <div className="mb-4 overflow-hidden rounded-full border border-rose-400/25 bg-rose-950/35">
+                <div className="flex h-2 justify-end">
+                  <div
+                    className="h-full bg-[linear-gradient(90deg,#ef4444,#f87171)] transition-[width] duration-75"
+                    style={{ width: `${previewProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4 flex items-center justify-between gap-3 text-sm">
+                <span className="text-rose-100/80">
+                  {reviewReady
+                    ? "Alles geprüft. Du kannst jetzt weitermachen."
+                    : `Bitte kurz prüfen: ${Math.ceil(reviewRemainingMs / 1000)}s`}
+                </span>
+              </div>
+
+              {photoPreviewUrl ? (
+                <div className="mb-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/20">
+                  <NextImage
+                    src={photoPreviewUrl}
+                    alt="Vorschau des Eintrags"
+                    width={1200}
+                    height={720}
+                    unoptimized
+                    className="h-40 w-full object-cover"
+                  />
+                </div>
+              ) : null}
+
+              <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-black/20 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-white/60">Name</span>
+                  <span className="text-sm font-semibold text-white">{nickname}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-white/60">Punktzahl</span>
+                  <span className="text-sm font-semibold text-white">{score}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-white/60">Board</span>
+                  <span className="text-sm font-semibold text-white">
+                    {gender === "female" ? "Damen" : "Männer"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3">
                 <FormSubmitButton
                   className="cta-button cta-primary w-full"
-                  disabled={!canSubmit || isPreparingUpload}
+                  disabled={!reviewReady || isPreparingUpload}
                 >
-                  {isPreparingUpload
-                    ? "Eintrag wird vorbereitet..."
-                    : "Speichern und Rangliste ansehen"}
+                  {isPreparingUpload ? "Wird gespeichert..." : "Weiter"}
                 </FormSubmitButton>
                 <button
                   type="button"
                   className="cta-button cta-secondary w-full"
                   disabled={isPreparingUpload}
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => setCurrentStep(3)}
                 >
-                  Zurück
+                  Änderungen vornehmen
                 </button>
               </div>
             </div>

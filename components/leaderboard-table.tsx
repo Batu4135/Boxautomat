@@ -116,32 +116,6 @@ export function LeaderboardTable({
     };
   }, []);
 
-  useEffect(() => {
-    const handleJump = (event: Event) => {
-      const customEvent = event as CustomEvent<{ id?: string }>;
-      const participantId = customEvent.detail?.id;
-
-      if (!participantId || !scrollRef.current) {
-        return;
-      }
-
-      const target = document.getElementById(`leaderboard-entry-${participantId}`);
-
-      if (!target || !scrollRef.current.contains(target)) {
-        return;
-      }
-
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-      setShowTopArrow(true);
-    };
-
-    window.addEventListener("jump-to-entry", handleJump as EventListener);
-
-    return () => {
-      window.removeEventListener("jump-to-entry", handleJump as EventListener);
-    };
-  }, []);
-
   return (
     <section className="app-panel relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,209,102,0.14),transparent_60%)]" />

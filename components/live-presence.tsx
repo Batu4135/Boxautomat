@@ -4,17 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 
 type LivePresenceProps = {
   participantCount: number;
-  bestRank: number | null;
-  bestLabel: string | null;
-  bestEntryId?: string | null;
 };
 
-export function LivePresence({
-  participantCount,
-  bestRank,
-  bestLabel,
-  bestEntryId = null
-}: LivePresenceProps) {
+export function LivePresence({ participantCount }: LivePresenceProps) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -52,34 +44,6 @@ export function LivePresence({
           Teilnehmerzahl {participantCount}
         </div>
       </div>
-
-      {bestRank ? (
-        <button
-          type="button"
-          className="w-full rounded-[1.75rem] border border-[#ffd166]/18 bg-[linear-gradient(135deg,rgba(255,209,102,0.16),rgba(255,255,255,0.03))] px-5 py-5 text-left shadow-[0_16px_40px_rgba(255,209,102,0.08)] transition hover:translate-y-[-1px]"
-          onClick={() => {
-            if (!bestEntryId) {
-              return;
-            }
-
-            window.dispatchEvent(
-              new CustomEvent("jump-to-entry", {
-                detail: { id: bestEntryId }
-              })
-            );
-          }}
-        >
-          <p className="text-[11px] uppercase tracking-[0.34em] text-[#ffe4a4]/70">
-            Dein bester Rang
-          </p>
-          <p className="mt-2 font-display text-4xl leading-none text-[#fff1c7] sm:text-5xl">
-            Platz #{bestRank}
-          </p>
-          {bestLabel ? (
-            <p className="mt-3 text-sm font-medium text-[#ffe4a4]/88 sm:text-base">{bestLabel}</p>
-          ) : null}
-        </button>
-      ) : null}
     </section>
   );
 }
